@@ -54,7 +54,7 @@ All tools are 100% open source.
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/ChargingTrex/safewalk.git
+git clone https://github.com/Vishaal1409/safewalk.git
 cd safewalk
 
 # 2. Copy environment config
