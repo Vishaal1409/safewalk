@@ -38,19 +38,18 @@ Every year in cities like Chennai, Mumbai, and Bengaluru, people fall into open 
 
 All tools are 100% open source.
 
-- **Frontend:** React + Vite + Tailwind CSS + Leaflet.js + OpenStreetMap
-- **Mobile:** Flutter
-- **Backend:** Node.js + Express
-- **Database:** PostgreSQL + PostGIS
-- **Routing:** OSRM (self-hosted) / pgRouting
-- **Auth:** JWT + bcrypt
-- **Infrastructure:** Docker + Docker Compose
+- **Frontend:** Streamlit + Folium + OpenStreetMap
+- **Backend:** Python + FastAPI
+- **Database:** PostgreSQL + PostGIS (via Supabase)
+- **Routing:** OSRM / pgRouting
+- **Auth:** JWT tokens
+- **Infrastructure:** Supabase (cloud hosted)
 
 ---
 
 ## 🚀 Quick Start
 
-**Prerequisites:** Docker and Docker Compose installed.
+**Prerequisites:** Python 3.x installed.
 
 ```bash
 # 1. Clone the repo
@@ -59,27 +58,24 @@ cd safewalk
 
 # 2. Copy environment config
 cp .env.example .env
+# Add your Supabase keys to .env
 
-# 3. Start everything
-docker compose up --build
+# 3. Install backend dependencies
+pip install fastapi uvicorn supabase python-jose passlib python-multipart
 
-# 4. Open in browser
-open http://localhost:5173
+# 4. Install frontend dependencies
+pip install streamlit folium streamlit-folium requests
+
+# 5. Run the backend
+cd backend
+uvicorn src.main:app --reload
+
+# 6. In a new terminal, run the frontend
+cd frontend
+streamlit run app.py
 ```
 
-That's it! The API runs on `localhost:3000`, the frontend on `localhost:5173`.
-
----
-
-## 📱 Mobile App (Flutter)
-
-```bash
-cd mobile
-flutter pub get
-flutter run
-```
-
-Set the API URL in `mobile/lib/config.dart` to point to your backend.
+The API runs on `http://localhost:8000` and the frontend opens automatically at `http://localhost:8501`.
 
 ---
 
@@ -87,24 +83,18 @@ Set the API URL in `mobile/lib/config.dart` to point to your backend.
 
 ```
 safewalk/
-├── backend/          # Node.js + Express API
+├── backend/              # Python + FastAPI
 │   ├── src/
-│   │   ├── routes/   # hazards.js, auth.js, routes.js
-│   │   ├── models/   # Hazard.js, User.js
-│   │   └── services/ # safetyScore.js, routeEngine.js
-│   └── Dockerfile
-├── frontend/         # React + Vite + Tailwind
-│   └── src/
-│       ├── components/  # Map, HazardForm, RoutePanel
-│       └── pages/       # Home, Report, Routes
-├── mobile/           # Flutter app
-│   └── lib/
-│       └── screens/  # MapScreen, ReportScreen
-├── db/
-│   └── init.sql      # PostGIS schema
+│   │   ├── routes/       # hazards.py, auth.py
+│   │   ├── models/       # hazard.py, user.py
+│   │   └── services/     # safety_score.py, route_engine.py
+│   └── requirements.txt
+├── frontend/             # Streamlit app
+│   └── app.py
 ├── docs/
 │   └── architecture.png
-├── docker-compose.yml
+├── .env.example
+├── .gitignore
 ├── LICENSE
 └── README.md
 ```
@@ -167,9 +157,10 @@ This project is licensed under the **MIT License** — see the [LICENSE](./LICEN
 ## 🙏 Acknowledgements
 
 - [OpenStreetMap](https://www.openstreetmap.org/) contributors
-- [Leaflet.js](https://leafletjs.com/) — open-source map library
-- [OSRM](http://project-osrm.org/) — open-source routing machine
-- [PostGIS](https://postgis.net/) — geospatial PostgreSQL extension
+- [Folium](https://python-visualization.github.io/folium/) — Python map visualisation library
+- [Streamlit](https://streamlit.io/) — open-source Python web framework
+- [FastAPI](https://fastapi.tiangolo.com/) — modern Python API framework
+- [Supabase](https://supabase.com/) — open-source Firebase alternative
 - [FOSS United](https://fossunited.org/) for organising FOSS Hack 2026
 
 ---
