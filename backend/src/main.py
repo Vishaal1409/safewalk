@@ -2,6 +2,18 @@ from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from typing import Optional
 import io
 from PIL import Image, UnidentifiedImageError
+from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+import uuid
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize Supabase client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Initialize the FastAPI app
 app = FastAPI(title="SafeWalk API")
@@ -9,63 +21,98 @@ app = FastAPI(title="SafeWalk API")
 # 1. Health Check
 @app.get("/")
 def health_check():
-    """Returns a simple status to confirm the backend is running."""
     return {"status": "online", "message": "SafeWalk Backend is active!"}
 
-# 2. Post Hazard (With Form Data and Strict Image Validation)
+# 2. Get all hazards
+@app.get("/hazards")
+def get_hazards():
+    """Fetch all hazards from Supabase database."""
+    try:
+        response = supabase.table("hazards").select("*").execute()
+        return {"hazards": response.data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 3. Post a new hazard
 @app.post("/hazards")
 async def create_hazard(
     type: str = Form(...),
     description: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    user_id: str = Form(...), 
-    image: Optional[UploadFile] = File(None) 
+    reported_by: str = Form(...),
+    image: Optional[UploadFile] = File(None)
 ):
-    """
-    Receives a new hazard report. If an image is attached, 
-    it strictly validates it before proceeding.
-    """
-    image_filename = "No image provided"
+    """Receives a hazard report and saves it to Supabase."""
+    photo_url = None
 
-    # Only run validation if a file was actually uploaded
+    # Handle image upload
     if image:
         try:
-            # 1. Read the file into memory
             file_bytes = await image.read()
-            
-            # 2. Open with Pillow to verify it's a real image
+
+            # Validate it's a real image
             img = Image.open(io.BytesIO(file_bytes))
             img.verify()
-            
-            # 3. Reset file pointer so Vishaal can upload it to Supabase later
-            await image.seek(0)
-            
-            # If successful, record the filename
-            image_filename = image.filename
+
+            # Upload to Supabase Storage
+            file_name = f"{uuid.uuid4()}_{image.filename}"
+            supabase.storage.from_("hazard-photos").upload(
+                file_name,
+                file_bytes,
+                {"content-type": image.content_type}
+            )
+
+            # Get public URL
+            photo_url = supabase.storage.from_("hazard-photos").get_public_url(file_name)
 
         except UnidentifiedImageError:
-            # If Pillow cannot identify it as an image (e.g., PDF, TXT), throw a 400 error
             raise HTTPException(
                 status_code=400,
-                detail="Error: The uploaded file is not a valid image."
+                detail="The uploaded file is not a valid image."
             )
         except Exception as e:
-            # Catch other potential server errors
             raise HTTPException(
                 status_code=500,
-                detail=f"Error processing file: {str(e)}"
+                detail=f"Error processing image: {str(e)}"
             )
 
-    # Return the clean JSON response (No UI, just data)
-    return {
-        "message": "Hazard reported successfully!",
-        "data": {
+    # Save hazard to database
+    try:
+        hazard_data = {
             "type": type,
             "description": description,
             "latitude": latitude,
             "longitude": longitude,
-            "user_id": user_id,
-            "uploaded_image": image_filename
+            "reported_by": reported_by,
+            "photo_url": photo_url,
+            "confirmed_count": 0
         }
-    }
+        response = supabase.table("hazards").insert(hazard_data).execute()
+        return {
+            "message": "Hazard reported successfully!",
+            "data": response.data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 4. Confirm a hazard (community verification)
+@app.post("/hazards/{hazard_id}/confirm")
+def confirm_hazard(hazard_id: str):
+    """Increment the confirmed count for a hazard."""
+    try:
+        # Get current count
+        response = supabase.table("hazards").select("confirmed_count").eq("id", hazard_id).execute()
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Hazard not found")
+        
+        current_count = response.data[0]["confirmed_count"]
+        
+        # Increment by 1
+        supabase.table("hazards").update(
+            {"confirmed_count": current_count + 1}
+        ).eq("id", hazard_id).execute()
+
+        return {"message": "Hazard confirmed!", "confirmed_count": current_count + 1}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
