@@ -116,3 +116,38 @@ def confirm_hazard(hazard_id: str):
         return {"message": "Hazard confirmed!", "confirmed_count": current_count + 1}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+from src.services.safety_score import calculate_street_safety_score, get_safety_label
+
+# 5. Get safety score for an area
+@app.get("/safety-score")
+def get_safety_score(latitude: float, longitude: float, radius: float = 0.01):
+    """
+    Calculate safety score for a given location.
+    Radius is in degrees (~1km = 0.01 degrees)
+    """
+    try:
+        # Fetch hazards near this location from Supabase
+        response = supabase.table("hazards").select("*").execute()
+        all_hazards = response.data
+
+        # Filter hazards within radius
+        nearby_hazards = []
+        for hazard in all_hazards:
+            lat_diff = abs(hazard["latitude"] - latitude)
+            lon_diff = abs(hazard["longitude"] - longitude)
+            if lat_diff <= radius and lon_diff <= radius:
+                nearby_hazards.append(hazard)
+
+        # Calculate score
+        score = calculate_street_safety_score(nearby_hazards)
+        label = get_safety_label(score)
+
+        return {
+            "latitude": latitude,
+            "longitude": longitude,
+            "nearby_hazards_count": len(nearby_hazards),
+            "safety_score": score,
+            "safety_label": label
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
