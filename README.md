@@ -61,7 +61,9 @@ cp .env.example .env
 # Add your Supabase keys to .env
 
 # 3. Install backend dependencies
-pip install fastapi uvicorn supabase python-jose passlib python-multipart
+cd backend
+pip install -r requirements.txt
+cd ..
 
 # 4. Install frontend dependencies
 pip install streamlit folium streamlit-folium requests
