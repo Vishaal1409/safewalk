@@ -17,23 +17,19 @@ services:
     restart: unless-stopped
 
   # ----------------------------------------
-  # Frontend Service (React / Vite)
+  # Frontend Service (Streamlit)
   # ----------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"  # Update to 5173 if using Vite
+      - "8501:8501"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - NODE_ENV=development
     restart: unless-stopped
     depends_on:
       - backend
-
   # ----------------------------------------
   # Optional: Database (e.g., PostgreSQL)
   # Uncomment if local DB is needed instead of Supabase
@@ -50,5 +46,5 @@ services:
   #     - postgres_data:/var/lib/postgresql/data
   #   restart: unless-stopped
 
-# volumes:
-#   postgres_data:
+  # volumes:
+  #   postgres_data:
