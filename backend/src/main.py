@@ -6,6 +6,7 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 import uuid
+from src.routes.auth import router as auth_router
 
 # Load environment variables from .env file
 load_dotenv()
@@ -17,6 +18,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Initialize the FastAPI app
 app = FastAPI(title="SafeWalk API")
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 # 1. Health Check
 @app.get("/")
