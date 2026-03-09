@@ -27,11 +27,19 @@ def health_check():
 
 # 2. Get all hazards
 @app.get("/hazards")
-def get_hazards():
-    """Fetch all hazards from Supabase database."""
+def get_hazards(latitude: Optional[float] = None, longitude: Optional[float] = None, radius: float = 0.01):
     try:
         response = supabase.table("hazards").select("*").execute()
-        return {"hazards": response.data}
+        all_hazards = response.data
+
+        if latitude is not None and longitude is not None:
+            filtered = []
+            for h in all_hazards:
+                if abs(h["latitude"] - latitude) <= radius and abs(h["longitude"] - longitude) <= radius:
+                    filtered.append(h)
+            return {"hazards": filtered, "count": len(filtered)}
+
+        return {"hazards": all_hazards, "count": len(all_hazards)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
