@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------
+  # Backend Service (FastAPI)
+  # ----------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+
+  # ----------------------------------------
+  # Frontend Service (Streamlit)
+  # ----------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./frontend:/app
+    restart: unless-stopped
+    depends_on:
+      - backend
+  # ----------------------------------------
+  # Optional: Database (e.g., PostgreSQL)
+  # Uncomment if local DB is needed instead of Supabase
+  # ----------------------------------------
+  # db:
+  #   image: postgres:15
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=safewalk
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+  # volumes:
+  #   postgres_data:
