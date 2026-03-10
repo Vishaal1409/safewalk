@@ -25,21 +25,44 @@ app.include_router(auth_router, prefix="/auth", tags=["auth"])
 def health_check():
     return {"status": "online", "message": "SafeWalk Backend is active!"}
 
-# 2. Get all hazards
+# 2. Get hazards (with optional location filter)
 @app.get("/hazards")
-def get_hazards(latitude: Optional[float] = None, longitude: Optional[float] = None, radius: float = 0.01):
+def get_hazards(
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    radius: float = 0.01
+):
+    """
+    Fetch hazards from the database.
+    If latitude and longitude are provided, return only hazards within the radius.
+    Radius is in degrees (~0.01 ≈ 1 km).
+    """
     try:
+        # Fetch all hazards from Supabase
         response = supabase.table("hazards").select("*").execute()
-        all_hazards = response.data
+        hazards = response.data or []
 
-        if latitude is not None and longitude is not None:
-            filtered = []
-            for h in all_hazards:
-                if abs(h["latitude"] - latitude) <= radius and abs(h["longitude"] - longitude) <= radius:
-                    filtered.append(h)
-            return {"hazards": filtered, "count": len(filtered)}
+        # If no location filter → return everything
+        if latitude is None or longitude is None:
+            return {
+                "hazards": hazards,
+                "count": len(hazards)
+            }
 
-        return {"hazards": all_hazards, "count": len(all_hazards)}
+        # Filter hazards near the location
+        nearby_hazards = []
+        for hazard in hazards:
+            lat_diff = abs(hazard["latitude"] - latitude)
+            lon_diff = abs(hazard["longitude"] - longitude)
+
+            if lat_diff <= radius and lon_diff <= radius:
+                nearby_hazards.append(hazard)
+
+        return {
+            "hazards": nearby_hazards,
+            "count": len(nearby_hazards)
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
