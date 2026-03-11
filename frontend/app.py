@@ -373,15 +373,11 @@ for h in hazards:
     """
 
     folium.Marker(
-        location=[lat, lon],
-        popup=folium.Popup(popup_html, max_width=280),
-        tooltip=cfg["label"],
-        icon=folium.Icon(
-            icon=cfg["icon"],
-            prefix="fa",
-            color=cfg["color"],
-        ),
-    ).add_to(m)
+    location=[lat, lon],
+    popup=folium.Popup(popup_html, max_width=280),
+    tooltip=cfg["label"],
+    icon=folium.Icon(color=cfg["color"])
+).add_to(m)
 
 # Render map
 map_data = st_folium(m, height=560, use_container_width=True, returned_objects=["last_clicked"])
