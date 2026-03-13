@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import io
 from PIL import Image, UnidentifiedImageError
@@ -16,14 +17,32 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+# Allowed hazard types
+ALLOWED_TYPES = ["manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"]
+
 # Initialize the FastAPI app
 app = FastAPI(title="SafeWalk API")
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth_router, prefix="/auth", tags=["auth"])
+
+# Import safety score service
+from src.services.safety_score import calculate_street_safety_score, get_safety_label
 
 # 1. Health Check
 @app.get("/")
 def health_check():
-    return {"status": "online", "message": "SafeWalk Backend is active!"}
+    return {
+        "status": "online",
+        "message": "SafeWalk Backend is active!"
+    }
 
 # 2. Get hazards (with optional location filter)
 @app.get("/hazards")
@@ -45,7 +64,9 @@ def get_hazards(
         # If no location filter → return everything
         if latitude is None or longitude is None:
             return {
-                "hazards": hazards,
+                "status": "success",
+                "message": "Hazards fetched successfully",
+                "data": hazards,
                 "count": len(hazards)
             }
 
@@ -59,7 +80,9 @@ def get_hazards(
                 nearby_hazards.append(hazard)
 
         return {
-            "hazards": nearby_hazards,
+            "status": "success",
+            "message": "Hazards fetched successfully",
+            "data": nearby_hazards,
             "count": len(nearby_hazards)
         }
 
@@ -78,6 +101,33 @@ async def create_hazard(
 ):
     """Receives a hazard report and saves it to Supabase."""
     photo_url = None
+
+    # Validate and clean inputs
+    type = type.strip().lower()
+
+    if type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid hazard type. Allowed types: {ALLOWED_TYPES}"
+        )
+
+    if not -90 <= latitude <= 90:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid latitude. Must be between -90 and 90"
+        )
+
+    if not -180 <= longitude <= 180:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid longitude. Must be between -180 and 180"
+        )
+
+    if not description.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Description cannot be empty"
+        )
 
     # Handle image upload
     if image:
@@ -123,6 +173,7 @@ async def create_hazard(
         }
         response = supabase.table("hazards").insert(hazard_data).execute()
         return {
+            "status": "success",
             "message": "Hazard reported successfully!",
             "data": response.data
         }
@@ -138,18 +189,21 @@ def confirm_hazard(hazard_id: str):
         response = supabase.table("hazards").select("confirmed_count").eq("id", hazard_id).execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="Hazard not found")
-        
+
         current_count = response.data[0]["confirmed_count"]
-        
+
         # Increment by 1
         supabase.table("hazards").update(
             {"confirmed_count": current_count + 1}
         ).eq("id", hazard_id).execute()
 
-        return {"message": "Hazard confirmed!", "confirmed_count": current_count + 1}
+        return {
+            "status": "success",
+            "message": "Hazard confirmed!",
+            "confirmed_count": current_count + 1
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-from src.services.safety_score import calculate_street_safety_score, get_safety_label
 
 # 5. Get safety score for an area
 @app.get("/safety-score")
@@ -176,6 +230,7 @@ def get_safety_score(latitude: float, longitude: float, radius: float = 0.01):
         label = get_safety_label(score)
 
         return {
+            "status": "success",
             "latitude": latitude,
             "longitude": longitude,
             "nearby_hazards_count": len(nearby_hazards),
