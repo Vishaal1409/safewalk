@@ -3,7 +3,7 @@
 ## Standup Notes - March 7, 2026
 
 **What did we accomplish today?**
-ARUN
+**Arun:**
 - **Backend Infrastructure**: Bootstrapped the Python environment with FastAPI, Uvicorn, Python-Multipart, and Pillow.
 - **API Development**: 
   - Implemented the `/` root health check endpoint.
