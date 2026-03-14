@@ -66,7 +66,7 @@ pip install -r requirements.txt
 cd ..
 
 # 4. Install frontend dependencies
-pip install streamlit folium streamlit-folium requests
+pip install -r frontend/requirements.txt
 
 # 5. Run the backend
 cd backend
