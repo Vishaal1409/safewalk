@@ -6,10 +6,12 @@ Tested boundary cases for the `radius` parameter at `[0, 0.01, 5, 10, 50]` km:
 - **Radius 5+**: Expanded filtering works correctly, hitting the ceiling of currently reported hazards in the test area. (Hazard count: 18, Score: 85.23 -> Safe)
 - **Conclusion**: The backend safety score logic scales appropriately without breaking at edge cases.
 
-## Duplicate Confirmation Test ✔
-- Confirmed a single hazard 10 times consecutively via the `/confirm` API endpoint.
-- **Result**: The API correctly incremented the confirmation count linearly (`1, 2, ..., 10`) without failing or throwing race-condition errors.
-- **Improvement**: *The API lacks rate limiting or user-based validation (e.g., one user = one confirm), allowing confirmation spam. Consider adding a `user_id` validation to the confirmation logic.*
+## Confirmation Edge Tests ✔
+- **Duplicate Confirmation**: Confirmed a single hazard 10 times consecutively via the `/confirm` API endpoint.
+  - **Result**: The API correctly incremented the confirmation count linearly (`1, 2, ..., 10`) without failing or throwing race-condition errors.
+- **Multiple Different Hazards Confirmation**: Fired confirmation requests for 5 distinct hazards concurrently.
+  - **Result**: The API correctly processed each unique hazard ID and incremented their respective `confirmed_count` perfectly. No database locks or race conditions were triggered.
+- **Improvement**: *The `/confirm` API lacks rate limiting or user-based validation (e.g., one user = one confirm), allowing confirmation spam. Consider adding a `user_id` validation to the confirmation logic.*
 
 ## Map Consistency Tests & Bug Hunt 🐞
 A comprehensive visual QA sweep of the Streamlit frontend revealed significant syncing and presentation bugs:
