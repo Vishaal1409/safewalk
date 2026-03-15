@@ -1,9 +1,10 @@
 import streamlit as st
 import folium
-from folium.plugins import LocateControl
+from folium.plugins import LocateControl, MarkerCluster
 from streamlit_folium import st_folium
 import requests
 import json
+import html
 
 # ── Config ──────────────────────────────────────────────────────────────────
 API_BASE = "http://localhost:8000"
@@ -16,6 +17,9 @@ HAZARD_CONFIG = {
     "broken_footpath": {"icon": "road", "color": "orange", "label": "Broken Footpath"},
     "unsafe_area": {"icon": "triangle-exclamation", "color": "darkred", "label": "Unsafe Area"},
     "no_wheelchair_access": {"icon": "wheelchair-move", "color": "gray", "label": "No Wheelchair Access"},
+    "other": {"icon": "circle-info", "color": "gray", "label": "Other"},
+    "POTHOLE": {"icon": "circle-exclamation", "color": "orange", "label": "Pothole"},
+    "FLOODING": {"icon": "water", "color": "blue", "label": "Flooding (Caps)"},
 }
 
 st.set_page_config(
@@ -211,14 +215,13 @@ st.markdown(
 
 
 # ── API helpers ─────────────────────────────────────────────────────────────
-@st.cache_data(ttl=30)
 def fetch_hazards():
     """Fetch all hazards from the backend."""
     try:
         resp = requests.get(f"{API_BASE}/hazards", timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("hazards", [])
+        return data.get("data", data.get("hazards", []))
     except Exception:
         return []
 
@@ -338,6 +341,9 @@ m = folium.Map(
 )
 LocateControl(auto_start=False, strings={"title": "Find me"}).add_to(m)
 
+# Add marker cluster
+marker_cluster = MarkerCluster().add_to(m)
+
 # Add hazard markers
 for h in hazards:
     lat = h.get("latitude")
@@ -348,6 +354,10 @@ for h in hazards:
     h_type = h.get("type", "unknown")
     cfg = HAZARD_CONFIG.get(h_type, {"icon": "circle-info", "color": "gray", "label": h_type})
     conf_count = h.get("confirmed_count", 0)
+    
+    # Escape description to prevent HTML injection clipping popups
+    safe_desc = html.escape(h.get('description', 'No description'))
+    safe_reporter = html.escape(h.get('reported_by', 'anonymous'))
 
     photo_html = ""
     if h.get("photo_url"):
@@ -359,10 +369,10 @@ for h in hazards:
             {cfg['label']}
         </div>
         <div style="font-size:12px;color:#444;margin-bottom:6px;">
-            {h.get('description', 'No description')}
+            {safe_desc}
         </div>
         <div style="font-size:11px;color:#888;margin-bottom:4px;">
-            Reported by <b>{h.get('reported_by', 'anonymous')}</b>
+            Reported by <b>{safe_reporter}</b>
         </div>
         <div style="display:flex;gap:12px;font-size:11px;color:#666;">
             <span>✅ {conf_count} confirmed</span>
@@ -377,7 +387,7 @@ for h in hazards:
     popup=folium.Popup(popup_html, max_width=280),
     tooltip=cfg["label"],
     icon=folium.Icon(color=cfg["color"])
-).add_to(m)
+).add_to(marker_cluster)
 
 # Render map
 map_data = st_folium(m, height=560, use_container_width=True, returned_objects=["last_clicked"])
