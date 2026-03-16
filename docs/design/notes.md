@@ -1,109 +1,133 @@
 # SafeWalk Design Notes
 
 ## Overview
-SafeWalk is a mobile-first safety navigation application designed to help users identify hazards and choose safer walking routes using community-reported data.
+SafeWalk is a community-powered navigation app that helps users avoid unsafe walking routes by identifying hazards such as open manholes, flooding, broken footpaths, and poorly lit areas.
 
-The interface allows users to:
-- View hazards on a map
-- Report hazards in real time
-- Compare normal routes vs safer routes
-
-The design focuses on **simple navigation, clear hazard visibility, and quick reporting**.
+The UI is designed as a **mobile-first interface** with three primary screens.
 
 ---
 
 # App Screens
 
-## Screen 1 — Map View
-The Map View acts as the **main dashboard** of the SafeWalk application.
+## 1. Map View
+Purpose: Display nearby hazards and the overall safety level of the area.
 
 Features:
-- Interactive map displaying hazard markers
+- Interactive map showing hazard markers
 - Safety score indicator
-- Hazard count and confirmed hazard count
-- Hazard filters (Manhole, Flood, Light, Path)
-- Floating **"+" button** to report a hazard
-- Bottom navigation bar
+- Hazard count and confirmation count
+- Color-coded hazard markers
+- Quick access to report hazards
+- Legend explaining hazard types
 
-Hazards are shown directly on the map using colored markers.
+Displayed information:
+- Safety Score
+- Total Hazards
+- Confirmed Hazards
+- Hazard locations on the map
+
+Marker Colors:
+- Red → Manhole
+- Blue → Flooding
+- Orange → Broken Footpath
+- Purple → No Streetlight
+- Dark Red → Unsafe Area
+- Gray → No Wheelchair Access
 
 ---
 
-## Screen 2 — Report Hazard Form
-This screen allows users to **report hazards they encounter**.
+## 2. Report Hazard Screen
+Purpose: Allow users to report hazards in their surroundings.
 
-Fields included:
-- Hazard type selector
-- Hazard description
-- Reporter name
-- Photo upload option
-- GPS-based location detection
-- Submit Hazard Report button
+Features:
+- Hazard type selection
+- Description input
+- Photo upload
+- Automatic GPS location detection
+- Submit hazard report button
 
-Supported hazard types:
-- Manhole
+Hazard types available:
+- Open Manhole
 - Flooding
 - No Streetlight
 - Broken Footpath
 - Unsafe Area
-- Accessibility Issue
+- No Wheelchair Access
+
+The report is sent to the backend and stored in the Supabase database.
 
 ---
 
-## Screen 3 — Route Result
-This screen displays **navigation options based on safety**.
+## 3. Route Result Screen
+Purpose: Show the safest route between two locations.
 
 Features:
-- Map displaying the route
-- Route comparison cards
-- Hazard warnings along routes
-- "Start Safe Navigation" button
+- Visual route preview on a map
+- Comparison between:
+  - Normal Route
+  - SafeWalk Route
+- Distance and estimated time
+- Hazard count on the route
+- Highlight of the safest route
 
-Example comparison:
+Displayed route information:
 
-Normal Route  
-- Distance: 1.2 km  
-- Time: 15 mins  
-- Hazards: 3  
+Normal Route
+- Distance
+- Travel Time
+- Number of hazards
 
-SafeWalk Route  
-- Distance: 1.5 km  
-- Time: 18 mins  
-- Hazards: 0  
+SafeWalk Route
+- Distance
+- Travel Time
+- Hazards avoided
+- Marked as the recommended route
 
-The SafeWalk route prioritizes **safety over distance**.
+Additional section:
+- List of hazards detected on the normal route
 
----
+Example:
+- Open Manhole — Velachery Main Road
+- Flooding — Anna Salai Junction
 
-# Completed Screens
-All 3 wireframes completed by **Ishitha — March 10, 2026**.
-
-Final wireframes updated with **Shruthika's detailed mobile layout improvements**.
-
----
-
-# Colour Codes
-
-## Primary UI Colours
-- Dark Pink Header: `#9D174D`
-- Hot Pink Buttons: `#DB2777`
-- Light Pink Background: `#FCE7F3`
-
-## Hazard Indicators
-- Red Hazard Marker (High Risk): `#DC2626`
-- Orange Marker (Medium Risk): `#D97706`
-- Blue Marker (Low Risk): `#3B82F6`
-
-## Navigation Indicators
-- Green Safe Route: `#16A34A`
-
-## Text Colours
-- Dark Gray Text: `#334155`
-- Medium Gray Subtext: `#64748B`
+Action Button:
+Start Safe Navigation
 
 ---
 
-# Figma Design Link
-SafeWalk Wireframe:
+# Design Principles
 
-https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe?node-id=28-139&t=HQrlX5D1dLX6RVnJ-1
+The UI follows these principles:
+
+- **Clarity:** Hazard information is easy to understand
+- **Safety-first:** Safe routes are visually highlighted
+- **Minimal interaction:** Reporting hazards takes only a few steps
+- **Community-driven:** Hazard confirmation improves reliability
+
+---
+
+# Tools Used
+
+Design Tool:
+Figma
+
+Frontend:
+Streamlit + Folium
+
+Backend:
+FastAPI
+
+Database & Storage:
+Supabase
+
+---
+
+# Figma Wireframe
+
+Figma Design Link:
+https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe
+
+The wireframe includes the complete UI layout for:
+- Map View
+- Report Hazard
+- Route Result
