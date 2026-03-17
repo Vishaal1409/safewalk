@@ -210,15 +210,14 @@ st.markdown(
 )
 
 
-# ── API helpers ─────────────────────────────────────────────────────────────
-@st.cache_data(ttl=30)
+# ── API helpers ────────────────────────────────────────────────────────────
+# @st.cache_data(ttl=30)
 def fetch_hazards():
-    """Fetch all hazards from the backend."""
     try:
         resp = requests.get(f"{API_BASE}/hazards", timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("hazards", [])
+        return data.get("data", [])   # ✅ THIS IS CORRECT
     except Exception:
         return []
 
@@ -292,6 +291,11 @@ safety = fetch_safety_score(CHENNAI_CENTER[0], CHENNAI_CENTER[1])
 # ── Score strip ─────────────────────────────────────────────────────────────
 score_val = safety["safety_score"] if safety else "—"
 score_label = safety["safety_label"] if safety else "Offline"
+status_color = {
+    "Safe": "#2ec4b6",
+    "Moderate": "#f0a500",
+    "Dangerous": "#e63946"
+}.get(score_label, "#6b7a99")
 hazard_count = len(hazards)
 confirmed = sum(1 for h in hazards if h.get("confirmed_count", 0) > 0)
 
@@ -314,7 +318,7 @@ st.markdown(
         </div>
         <div class="score-card">
             <div class="label">Status</div>
-            <div class="value value-amber" style="font-size:0.95rem;">{score_label}</div>
+            <div class="value" style="font-size:0.95rem;color:{status_color};">{score_label}</div>
         </div>
         <div class="score-card">
             <div class="label">Hazards</div>
@@ -342,10 +346,42 @@ LocateControl(auto_start=False, strings={"title": "Find me"}).add_to(m)
 for h in hazards:
     lat = h.get("latitude")
     lon = h.get("longitude")
+
     if lat is None or lon is None:
         continue
 
-    h_type = h.get("type", "unknown")
+    h_type = str(h.get("type", "unknown")).strip().lower()
+    cfg = HAZARD_CONFIG.get(h_type, {"color": "gray", "label": h_type})
+
+    popup_html = f"""
+    <div style="font-family:Barlow,sans-serif;">
+        <b>{cfg['label']}</b><br>
+        {h.get('description', 'No description')}<br>
+        👤 {h.get('reported_by', 'anonymous')}<br>
+        ✅ {h.get('confirmed_count', 0)} confirmations
+    </div>
+    """
+
+    folium.Marker(
+        location=[lat, lon],
+        popup=folium.Popup(popup_html, max_width=250),
+        icon=folium.Icon(color=cfg["color"])
+    ).add_to(m)
+
+    h_type = str(h.get("type", "unknown")).strip().lower()
+    cfg = HAZARD_CONFIG.get(h_type, {"color": "gray", "label": h_type})
+
+    folium.Marker(
+        location=[lat, lon],
+        popup=f"""
+        <b>{cfg['label']}</b><br>
+        {h.get('description', 'No description')}<br>
+        ✅ {h.get('confirmed_count', 0)} confirmations
+        """,
+        icon=folium.Icon(color=cfg["color"])
+    ).add_to(m)
+
+    h_type = h.get("type", "unknown").strip().lower()
     cfg = HAZARD_CONFIG.get(h_type, {"icon": "circle-info", "color": "gray", "label": h_type})
     conf_count = h.get("confirmed_count", 0)
 
@@ -376,7 +412,11 @@ for h in hazards:
     location=[lat, lon],
     popup=folium.Popup(popup_html, max_width=280),
     tooltip=cfg["label"],
-    icon=folium.Icon(color=cfg["color"])
+    icon=folium.Icon(
+    color=cfg["color"],
+    icon=cfg["icon"],
+    prefix="fa"
+)
 ).add_to(m)
 
 # Render map
@@ -398,16 +438,25 @@ COLOR_MAP = {
 }
 
 legend_items = "".join(
-    f'<div class="legend-item"><div class="legend-dot" style="background:{COLOR_MAP.get(c["color"], "#888")};"></div>{c["label"]}</div>'
-    for c in HAZARD_CONFIG.values()
-)
-st.markdown(
-    f'<div class="legend-grid">{legend_items}</div>',
-    unsafe_allow_html=True,
+    f'<div class="legend-item">'
+    f'<div class="legend-dot" style="background:{COLOR_MAP.get(v["color"], "#888")};"></div>'
+    f'{v["label"]}</div>'
+    for v in HAZARD_CONFIG.values()
 )
 
 # ── Sidebar: Report + Confirm ──────────────────────────────────────────────
 with st.sidebar:
+
+    # Legend
+    st.markdown('<div class="sidebar-title">Hazard Legend</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="legend-grid">{legend_items}</div>', unsafe_allow_html=True)
+
+    # Report section
+    st.markdown('<div class="sidebar-title">Report a Hazard</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sidebar-section">Click the map to set location</div>',
+        unsafe_allow_html=True,
+    )
     st.markdown('<div class="sidebar-title">Report a Hazard</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="sidebar-section">Click the map to set location</div>',
@@ -472,7 +521,7 @@ with st.sidebar:
 
     if hazards:
         for h in hazards[:10]:
-            h_type = h.get("type", "unknown")
+            h_type = h.get("type", "unknown").strip().lower()
             cfg = HAZARD_CONFIG.get(h_type, {"label": h_type})
             desc_short = (h.get("description", "")[:50] + "...") if len(h.get("description", "")) > 50 else h.get("description", "")
             conf = h.get("confirmed_count", 0)

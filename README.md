@@ -167,4 +167,24 @@ This project is licensed under the **MIT License** — see the [LICENSE](./LICEN
 
 ---
 
+## 📸 Demo Screenshots
+
+### 📝 Hazard Reporting & Popup
+![Hazard Reporting](docs/screenshots/report.png)
+
+---
+
+### 🗺️ Map with Hazard Markers
+![Map](docs/screenshots/map.png)
+
+---
+
+### ✅ Hazard Confirmation
+![Confirm](docs/screenshots/confirm.png)
+
+---
+
+### 📊 Safety Score Feature
+![Safety Score](docs/screenshots/safety.png)
+
 <p align="center">Made with ❤️ for safer streets in India • Random Forest Rangers 🌲</p>
