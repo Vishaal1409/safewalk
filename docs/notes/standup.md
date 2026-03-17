@@ -44,3 +44,39 @@
 
 **Any blockers?**
 - None currently. The map is rendering correctly and frontend/backend communication is verified under stress loads.
+
+## Standup Notes - March 15, 2026
+
+**What did we accomplish today?**
+**Arun:**
+- **Final QA Checklist**: Created a comprehensive QA checklist (`docs/reports/qa_checklist_march15.md`) covering functional tests, API endpoint validation, and input validation checks across the entire SafeWalk application.
+- **QA Results**: Verified all 6 core features — map loading, hazard marker display, popup functionality, image loading, confirm count updates, and safety score calculations — all passing.
+- **Improvement Suggestions**: Documented 3 actionable improvements:
+  1. Rate-limit the `/confirm` endpoint to prevent spam confirmations.
+  2. Add hazard auto-archival for stale reports older than 30 days.
+  3. Sync `ALLOWED_TYPES` between backend and frontend (the `"other"` type is missing from the backend).
+
+**What's next?**
+- Perform hazard density testing to validate the route safety algorithm under varying hazard concentrations.
+
+**Any blockers?**
+- None. No critical bugs remain after the final QA sweep.
+
+## Standup Notes - March 16, 2026
+
+**What did we accomplish today?**
+**Arun:**
+- **Hazard Density Testing**: Analyzed how hazard density affects route safety scores across three scenarios — low (0–2 hazards), medium (3–5 hazards), and high (8+ hazards) density areas. Full report at `docs/reports/hazard_density_testing_march16.md`.
+- **Algorithm Validation**: Confirmed the scoring algorithm correctly differentiates density levels:
+  - Low density → 90–100 (✅ Safe)
+  - Medium density → 60–80 (⚠️ Use Caution)
+  - High density → 0–40 (🔴 High Risk)
+- **Key Findings**: Night-time uplift (1.5× for `no_light`), community confirmation boost (+10% per confirm), and recency decay (old hazards weighted at 10%) all function as designed.
+- **Edge Case Verified**: Score correctly floors at 0 when total danger exceeds 100 — no negative scores produced.
+
+**What's next?**
+- Address the 3 improvement suggestions from the QA checklist (rate limiting, auto-archival, type sync).
+- Begin final pre-deployment checks and documentation updates.
+
+**Any blockers?**
+- None. The route safety algorithm is validated and no critical bugs remain.
