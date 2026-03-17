@@ -50,7 +50,9 @@ def health_check():
 def get_hazards(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
-    radius: float = 0.01
+    radius: float = 0.01,
+    type: Optional[str] = None,
+    min_confirmed: Optional[int] = None
 ):
     """
     Fetch hazards from the database.
@@ -61,6 +63,22 @@ def get_hazards(
         # Fetch all hazards from Supabase
         response = supabase.table("hazards").select("*").execute()
         hazards = response.data or []
+        if type:
+            type = type.strip().lower()
+            hazards = [h for h in hazards if h.get("type") == type]
+
+        # Apply minimum confirmed filter
+        if min_confirmed is not None:
+            hazards = [h for h in hazards if h.get("confirmed_count", 0) >= min_confirmed]
+        # Sort by confirmed count (highest first) then by created_at (newest first)
+        hazards = sorted(
+           hazards,
+           key=lambda h: (
+               -(h.get("confirmed_count", 0)),
+               h.get("created_at", "")
+          ),
+          reverse=False
+)
 
         # If no location filter → return everything
         if latitude is None or longitude is None:
@@ -183,17 +201,36 @@ async def create_hazard(
 
 # 4. Confirm a hazard (community verification)
 @app.post("/hazards/{hazard_id}/confirm")
-def confirm_hazard(hazard_id: str):
-    """Increment the confirmed count for a hazard."""
+def confirm_hazard(hazard_id: str, confirmed_by: str = "anonymous"):
+    """
+    Increment confirmed count.
+    Prevents same person confirming same hazard twice.
+    """
     try:
-        # Get current count
+        # Check if hazard exists
         response = supabase.table("hazards").select("confirmed_count").eq("id", hazard_id).execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="Hazard not found")
 
-        current_count = response.data[0]["confirmed_count"]
+        # Check if this person already confirmed this hazard
+        already_confirmed = supabase.table("confirmations").select("id").eq(
+            "hazard_id", hazard_id
+        ).eq("confirmed_by", confirmed_by).execute()
 
-        # Increment by 1
+        if already_confirmed.data:
+            raise HTTPException(
+                status_code=400,
+                detail="You have already confirmed this hazard!"
+            )
+
+        # Add confirmation record
+        supabase.table("confirmations").insert({
+            "hazard_id": hazard_id,
+            "confirmed_by": confirmed_by
+        }).execute()
+
+        # Increment confirmed count
+        current_count = response.data[0]["confirmed_count"]
         supabase.table("hazards").update(
             {"confirmed_count": current_count + 1}
         ).eq("id", hazard_id).execute()
@@ -203,6 +240,9 @@ def confirm_hazard(hazard_id: str):
             "message": "Hazard confirmed!",
             "confirmed_count": current_count + 1
         }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
