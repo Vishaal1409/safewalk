@@ -1,133 +1,184 @@
-# SafeWalk Design Notes
+# SafeWalk — Design Notes
+
+**Ishitha Ilan · UI/UX Design · Random Forest Rangers · FOSS Hack 2026**
+
+---
 
 ## Overview
-SafeWalk is a community-powered navigation app that helps users avoid unsafe walking routes by identifying hazards such as open manholes, flooding, broken footpaths, and poorly lit areas.
 
-The UI is designed as a **mobile-first interface** with three primary screens.
+SafeWalk is a community-powered safety navigation platform that helps users avoid unsafe routes by identifying real-time hazards — open manholes, flooding, broken footpaths, and poorly lit areas.
 
----
-
-# App Screens
-
-## 1. Map View
-Purpose: Display nearby hazards and the overall safety level of the area.
-
-Features:
-- Interactive map showing hazard markers
-- Safety score indicator
-- Hazard count and confirmation count
-- Color-coded hazard markers
-- Quick access to report hazards
-- Legend explaining hazard types
-
-Displayed information:
-- Safety Score
-- Total Hazards
-- Confirmed Hazards
-- Hazard locations on the map
-
-Marker Colors:
-- Red → Manhole
-- Blue → Flooding
-- Orange → Broken Footpath
-- Purple → No Streetlight
-- Dark Red → Unsafe Area
-- Gray → No Wheelchair Access
+It combines live hazard mapping, safety scoring, community reporting, and smart route comparison into a single clean mobile experience.
 
 ---
 
-## 2. Report Hazard Screen
-Purpose: Allow users to report hazards in their surroundings.
+## Figma File
 
-Features:
-- Hazard type selection
-- Description input
-- Photo upload
-- Automatic GPS location detection
-- Submit hazard report button
+[safewalk-wireframe](https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe)
 
-Hazard types available:
-- Open Manhole
-- Flooding
-- No Streetlight
-- Broken Footpath
-- Unsafe Area
-- No Wheelchair Access
-
-The report is sent to the backend and stored in the Supabase database.
+Includes: Map View · Report Screen · Route Comparison · Error States
 
 ---
 
-## 3. Route Result Screen
-Purpose: Show the safest route between two locations.
+## App Screens
 
-Features:
-- Visual route preview on a map
-- Comparison between:
-  - Normal Route
-  - SafeWalk Route
-- Distance and estimated time
-- Hazard count on the route
-- Highlight of the safest route
+### 01 · Map View
+The home screen. Shows nearby hazards on a live map with safety context.
 
-Displayed route information:
+**Features**
+- Interactive map with hazard markers and clustering
+- Filter chips by hazard type + confirmed-only toggle
+- 📍 Use current location button
+- ➕ Quick report FAB button
+- Hazard legend (color-coded)
 
-Normal Route
-- Distance
-- Travel Time
-- Number of hazards
+**Displays**
+- Safety Score (0–100) and status label (Safe / Moderate / Dangerous)
+- Total hazards + confirmed hazard count
 
-SafeWalk Route
-- Distance
-- Travel Time
-- Hazards avoided
-- Marked as the recommended route
+**Map Marker Colors**
 
-Additional section:
-- List of hazards detected on the normal route
+| Color | Hazard Type |
+|-------|-------------|
+| 🔴 Red | Open Manhole |
+| 🔵 Blue | Flooding |
+| 🟠 Orange | Broken Footpath |
+| 🟣 Purple | No Streetlight |
+| 🔺 Dark Red | Unsafe Area |
+| ⚪ Gray | No Wheelchair Access |
 
-Example:
-- Open Manhole — Velachery Main Road
-- Flooding — Anna Salai Junction
-
-Action Button:
-Start Safe Navigation
-
----
-
-# Design Principles
-
-The UI follows these principles:
-
-- **Clarity:** Hazard information is easy to understand
-- **Safety-first:** Safe routes are visually highlighted
-- **Minimal interaction:** Reporting hazards takes only a few steps
-- **Community-driven:** Hazard confirmation improves reliability
+**Marker Popup Shows**
+- Hazard type (bold + colored)
+- Description
+- Reporter name
+- Confirmation count (large, prominent)
+- Coordinates
+- Photo (if uploaded)
 
 ---
 
-# Tools Used
+### 02 · Report Hazard
+Lets users report a hazard in seconds.
 
-Design Tool:
-Figma
+**Features**
+- Hazard type selector (6 icon buttons in bento grid)
+- Description and name input fields
+- Photo upload (JPG / PNG, max 5MB)
+- GPS auto-fill with manual coordinate override
+- Map tap to set location
 
-Frontend:
-Streamlit + Folium
+**Feedback States**
 
-Backend:
-FastAPI
-
-Database & Storage:
-Supabase
+| State | Message |
+|-------|---------|
+| ✅ Success | "Hazard Reported! Thank you." |
+| ⚠️ API Error | "Couldn't connect — backend offline" |
+| ❗ Validation | "Description is required" / "Name is required" |
 
 ---
 
-# Figma Wireframe
+### 02b · Error State
+Same as Report screen but with red borders on empty required fields and inline error text under each field. Demonstrates full validation UX for demo purposes.
 
-Figma Design Link:
-https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe
+---
 
-The wireframe includes the complete UI layout for:
-- Map View
-- Report Hazard
-- Route Result
+### 03 · Route Comparison
+Shows two routes side by side so users can choose the safer one.
+
+**Route Cards**
+
+| | 🔴 Normal Route | 🟢 SafeWalk Route |
+|-|----------------|------------------|
+| Distance | 1.2 km | 1.5 km |
+| Time | 15 mins | 18 mins |
+| Hazards | 3 on route | 0 hazards |
+| Status | — | ✅ Recommended |
+
+**Also shows**
+- Safety Score: 92 / 100
+- Time comparison tile with "+3 min · ✅ Safer Route Recommended" callout
+- Hazard breakdown list — each hazard with type, color dot, and location reason:
+  - 🔴 Open Manhole — Velachery Rd
+  - 🔵 Flooding — Anna Salai
+  - 💡 No Streetlight — Side street
+
+**Design note:** Safety > shortest distance. The longer route is always highlighted as recommended when it avoids hazards.
+
+---
+
+## UX Flow
+
+```
+Open app → See map + hazards
+    ↓
+Tap marker → View hazard popup
+    ↓
+Tap + → Report new hazard → Submit → Success / Error feedback
+    ↓
+Search route → Compare Normal vs SafeWalk → Start navigation
+```
+
+---
+
+## Color System
+
+| Role | Hex | Where used |
+|------|-----|------------|
+| Black | `#1a1a1a` | Headers, buttons, active nav |
+| Orange | `#ff6b35` | FAB, submit button, nav dot |
+| Green | `#22c55e` | Safe route, success, 0 hazards |
+| Red | `#ef4444` | Danger / Manhole |
+| Orange-Red | `#f97316` | Broken path marker |
+| Blue | `#3b82f6` | Flooding marker |
+| Off-white | `#f5f3ee` | Phone background |
+| Warm grey | `#edeae3` | Page background |
+
+**Rule:** Red = danger, Blue = flooding, Orange = path issues — consistent across map markers, legend, route screen, and hazard breakdown everywhere.
+
+---
+
+## Design Principles
+
+- **Clarity** — every element has one clear purpose
+- **Safety-first** — risks are always visually prominent
+- **Minimal effort** — reporting takes under 30 seconds
+- **Community-driven** — confirmations increase reliability
+- **Consistent** — same colors, same icons, same language everywhere
+
+---
+
+## UI Polish
+
+- Hover effects on all interactive elements (chips, buttons, markers)
+- Map markers staggered to prevent label overlap
+- Bottom navigation bar on every screen — active tab bold/dark, inactive faded
+- Popup card layout with proper spacing and type hierarchy
+- Both success and error states fully designed (demo-proof)
+- Field-level validation messages in error state
+
+---
+
+## Tech Stack
+
+| Layer | Tool |
+|-------|------|
+| Design | Figma |
+| Frontend | Streamlit + Folium |
+| Backend | FastAPI |
+| Database | Supabase |
+
+---
+
+## Frontend Notes (for Shruthika)
+
+The improved `app.py` includes:
+- Form section dividers (Hazard Type / Details / Location)
+- Hazard legend with section heading
+- `st.success()` on successful submit
+- `st.error()` on API failure or validation error
+- All 6 hazard types with unique emoji, FontAwesome icon, and hex color
+- `unsafe_area` uses black marker (distinct from manhole red)
+
+---
+
+*Last updated: March 17, 2026*
