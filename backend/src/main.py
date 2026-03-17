@@ -1,5 +1,5 @@
 from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety, calculate_wheelchair_route
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import io
@@ -8,6 +8,7 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 import uuid
+import html
 from src.routes.auth import router as auth_router
 
 # Load environment variables from .env file
@@ -51,7 +52,7 @@ def get_hazards(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
     radius: float = 0.01,
-    type: Optional[str] = None,
+    hazard_type: Optional[str] = Query(None, alias="type"),
     min_confirmed: Optional[int] = None
 ):
     """
@@ -63,9 +64,10 @@ def get_hazards(
         # Fetch all hazards from Supabase
         response = supabase.table("hazards").select("*").execute()
         hazards = response.data or []
-        if type:
-            type = type.strip().lower()
-            hazards = [h for h in hazards if h.get("type") == type]
+        print(f"DEBUG hazard_type: {repr(hazard_type)}", flush=True)
+        if hazard_type:
+            hazard_type = hazard_type.strip().lower()
+            hazards = [h for h in hazards if h.get("type") == hazard_type]
 
         # Apply minimum confirmed filter
         if min_confirmed is not None:
@@ -181,9 +183,10 @@ async def create_hazard(
 
     # Save hazard to database
     try:
+        safe_description = html.escape(description)
         hazard_data = {
             "type": type,
-            "description": description,
+            "description": safe_description,
             "latitude": latitude,
             "longitude": longitude,
             "reported_by": reported_by,
