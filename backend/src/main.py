@@ -1,3 +1,4 @@
+from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -237,5 +238,67 @@ def get_safety_score(latitude: float, longitude: float, radius: float = 0.01):
             "safety_score": score,
             "safety_label": label
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 6. Safe Route Comparison
+@app.get("/safe-route")
+def get_safe_route(
+    start_lat: float,
+    start_lon: float,
+    end_lat: float,
+    end_lon: float
+):
+    """
+    Compare normal route vs safe route.
+    Returns hazard count and distance for both.
+    """
+    try:
+        # Fetch all hazards from Supabase
+        response = supabase.table("hazards").select("*").execute()
+        all_hazards = response.data or []
+
+        # Calculate straight line distance (normal route)
+        normal_distance = haversine_distance(
+            start_lat, start_lon,
+            end_lat, end_lon
+        )
+
+        # Get hazards along normal route
+        hazards_on_normal_route = get_hazards_along_route(
+            start_lat, start_lon,
+            end_lat, end_lon,
+            all_hazards,
+            proximity_km=0.1
+        )
+
+        normal_route_safety = calculate_route_safety(hazards_on_normal_route)
+
+        # Safe route adds 20% distance but avoids high penalty hazards
+        safe_distance = round(normal_distance * 1.2, 2)
+
+        # Filter out high penalty hazards for safe route
+        safe_hazards = [
+            h for h in hazards_on_normal_route
+            if h.get("type") not in ["manhole", "flooding", "unsafe_area"]
+        ]
+
+        safe_route_safety = calculate_route_safety(safe_hazards)
+
+        return {
+            "status": "success",
+            "normal_route": {
+                "distance_km": round(normal_distance, 2),
+                "hazard_count": normal_route_safety["hazard_count"],
+                "penalty_score": normal_route_safety["penalty_score"]
+            },
+            "safe_route": {
+                "distance_km": safe_distance,
+                "hazard_count": safe_route_safety["hazard_count"],
+                "penalty_score": safe_route_safety["penalty_score"]
+            },
+            "recommendation": "safe_route" if normal_route_safety["hazard_count"] > 0 else "normal_route"
+        }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

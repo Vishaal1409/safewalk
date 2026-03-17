@@ -1,9 +1,11 @@
 import streamlit as st
 import folium
-from folium.plugins import LocateControl
+from folium.plugins import LocateControl, MarkerCluster
+from folium.utilities import JsCode
 from streamlit_folium import st_folium
 import requests
 import json
+import html
 
 # ── Config ──────────────────────────────────────────────────────────────────
 API_BASE = "http://localhost:8000"
@@ -16,6 +18,9 @@ HAZARD_CONFIG = {
     "broken_footpath": {"icon": "road", "color": "orange", "label": "Broken Footpath"},
     "unsafe_area": {"icon": "triangle-exclamation", "color": "darkred", "label": "Unsafe Area"},
     "no_wheelchair_access": {"icon": "wheelchair-move", "color": "gray", "label": "No Wheelchair Access"},
+    "other": {"icon": "circle-info", "color": "gray", "label": "Other"},
+    "POTHOLE": {"icon": "circle-exclamation", "color": "orange", "label": "Pothole"},
+    "FLOODING": {"icon": "water", "color": "blue", "label": "Flooding (Caps)"},
 }
 
 st.set_page_config(
@@ -210,15 +215,14 @@ st.markdown(
 )
 
 
-# ── API helpers ────────────────────────────────────────────────────────────
-# @st.cache_data(ttl=30)
 def fetch_hazards():
     try:
         resp = requests.get(f"{API_BASE}/hazards", timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("data", [])   # ✅ THIS IS CORRECT
-    except Exception:
+        return data.get("data", [])
+    except Exception as e:
+        print("Error fetching hazards:", e)
         return []
 
 
@@ -342,6 +346,16 @@ m = folium.Map(
 )
 LocateControl(auto_start=False, strings={"title": "Find me"}).add_to(m)
 
+# Add marker cluster with 500m fixed radius
+cluster_radius_js = JsCode("""
+function(zoom) {
+    var lat = 13.0827;
+    var metersPerPixel = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+    return 500 / metersPerPixel;
+}
+""")
+marker_cluster = MarkerCluster(options={"maxClusterRadius": cluster_radius_js}).add_to(m)
+
 # Add hazard markers
 for h in hazards:
     lat = h.get("latitude")
@@ -351,39 +365,11 @@ for h in hazards:
         continue
 
     h_type = str(h.get("type", "unknown")).strip().lower()
-    cfg = HAZARD_CONFIG.get(h_type, {"color": "gray", "label": h_type})
-
-    popup_html = f"""
-    <div style="font-family:Barlow,sans-serif;">
-        <b>{cfg['label']}</b><br>
-        {h.get('description', 'No description')}<br>
-        👤 {h.get('reported_by', 'anonymous')}<br>
-        ✅ {h.get('confirmed_count', 0)} confirmations
-    </div>
-    """
-
-    folium.Marker(
-        location=[lat, lon],
-        popup=folium.Popup(popup_html, max_width=250),
-        icon=folium.Icon(color=cfg["color"])
-    ).add_to(m)
-
-    h_type = str(h.get("type", "unknown")).strip().lower()
-    cfg = HAZARD_CONFIG.get(h_type, {"color": "gray", "label": h_type})
-
-    folium.Marker(
-        location=[lat, lon],
-        popup=f"""
-        <b>{cfg['label']}</b><br>
-        {h.get('description', 'No description')}<br>
-        ✅ {h.get('confirmed_count', 0)} confirmations
-        """,
-        icon=folium.Icon(color=cfg["color"])
-    ).add_to(m)
-
-    h_type = h.get("type", "unknown").strip().lower()
     cfg = HAZARD_CONFIG.get(h_type, {"icon": "circle-info", "color": "gray", "label": h_type})
     conf_count = h.get("confirmed_count", 0)
+
+    safe_desc = html.escape(h.get('description', 'No description'))
+    safe_reporter = html.escape(h.get('reported_by', 'anonymous'))
 
     photo_html = ""
     if h.get("photo_url"):
@@ -395,10 +381,48 @@ for h in hazards:
             {cfg['label']}
         </div>
         <div style="font-size:12px;color:#444;margin-bottom:6px;">
-            {h.get('description', 'No description')}
+            {safe_desc}
         </div>
         <div style="font-size:11px;color:#888;margin-bottom:4px;">
-            Reported by <b>{h.get('reported_by', 'anonymous')}</b>
+            Reported by <b>{safe_reporter}</b>
+        </div>
+        <div style="display:flex;gap:12px;font-size:11px;color:#666;">
+            <span>✅ {conf_count} confirmed</span>
+            <span>📍 {lat:.4f}, {lon:.4f}</span>
+        </div>
+        {photo_html}
+    </div>
+    """
+
+    folium.Marker(
+        location=[lat, lon],
+        popup=folium.Popup(popup_html, max_width=280),
+        tooltip=cfg["label"],
+        icon=folium.Icon(
+            color=cfg["color"],
+            icon=cfg["icon"],
+            prefix="fa"
+        )
+    ).add_to(marker_cluster)
+    
+    # Escape description to prevent HTML injection clipping popups
+    safe_desc = html.escape(h.get('description', 'No description'))
+    safe_reporter = html.escape(h.get('reported_by', 'anonymous'))
+
+    photo_html = ""
+    if h.get("photo_url"):
+        photo_html = f'<img src="{h["photo_url"]}" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-top:8px;">'
+
+    popup_html = f"""
+    <div style="font-family:Barlow,sans-serif;min-width:200px;max-width:260px;">
+        <div style="font-weight:700;font-size:14px;color:#1a1a2e;margin-bottom:4px;">
+            {cfg['label']}
+        </div>
+        <div style="font-size:12px;color:#444;margin-bottom:6px;">
+            {safe_desc}
+        </div>
+        <div style="font-size:11px;color:#888;margin-bottom:4px;">
+            Reported by <b>{safe_reporter}</b>
         </div>
         <div style="display:flex;gap:12px;font-size:11px;color:#666;">
             <span>✅ {conf_count} confirmed</span>
@@ -412,12 +436,7 @@ for h in hazards:
     location=[lat, lon],
     popup=folium.Popup(popup_html, max_width=280),
     tooltip=cfg["label"],
-    icon=folium.Icon(
-    color=cfg["color"],
-    icon=cfg["icon"],
-    prefix="fa"
-)
-).add_to(m)
+
 
 # Render map
 map_data = st_folium(m, height=560, use_container_width=True, returned_objects=["last_clicked"])
@@ -457,7 +476,7 @@ with st.sidebar:
         '<div class="sidebar-section">Click the map to set location</div>',
         unsafe_allow_html=True,
     )
-    st.markdown('<div class="sidebar-title">Report a Hazard</div>', unsafe_allow_html=True)
+    
     st.markdown(
         '<div class="sidebar-section">Click the map to set location</div>',
         unsafe_allow_html=True,
