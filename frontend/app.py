@@ -1,6 +1,7 @@
 import streamlit as st
 import folium
 from folium.plugins import LocateControl, MarkerCluster
+from folium.utilities import JsCode
 from streamlit_folium import st_folium
 import requests
 import json
@@ -341,8 +342,15 @@ m = folium.Map(
 )
 LocateControl(auto_start=False, strings={"title": "Find me"}).add_to(m)
 
-# Add marker cluster
-marker_cluster = MarkerCluster().add_to(m)
+# Add marker cluster with 500m fixed radius
+cluster_radius_js = JsCode("""
+function(zoom) {
+    var lat = 13.0827;
+    var metersPerPixel = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+    return 500 / metersPerPixel;
+}
+""")
+marker_cluster = MarkerCluster(options={"maxClusterRadius": cluster_radius_js}).add_to(m)
 
 # Add hazard markers
 for h in hazards:
