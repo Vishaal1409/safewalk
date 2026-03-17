@@ -1,4 +1,4 @@
-from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety
+from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety, calculate_wheelchair_route
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -338,6 +338,40 @@ def get_safe_route(
                 "penalty_score": safe_route_safety["penalty_score"]
             },
             "recommendation": "safe_route" if normal_route_safety["hazard_count"] > 0 else "normal_route"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    # 7. Wheelchair Safe Route
+@app.get("/wheelchair-route")
+def get_wheelchair_route(
+    start_lat: float,
+    start_lon: float,
+    end_lat: float,
+    end_lon: float
+):
+    """
+    Calculate wheelchair-safe route.
+    Avoids broken footpaths, no wheelchair access,
+    manholes and flooding hazards.
+    """
+    try:
+        # Fetch all hazards from Supabase
+        response = supabase.table("hazards").select("*").execute()
+        all_hazards = response.data or []
+
+        # Calculate wheelchair route comparison
+        result = calculate_wheelchair_route(
+            start_lat, start_lon,
+            end_lat, end_lon,
+            all_hazards
+        )
+
+        return {
+            "status": "success",
+            "start": {"lat": start_lat, "lon": start_lon},
+            "end": {"lat": end_lat, "lon": end_lon},
+            **result
         }
 
     except Exception as e:

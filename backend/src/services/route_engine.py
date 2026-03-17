@@ -88,3 +88,97 @@ def calculate_route_safety(hazards_on_route: list) -> dict:
         "hazard_count": len(hazards_on_route),
         "penalty_score": round(total_penalty, 2)
     }
+def get_wheelchair_hazards(
+    start_lat: float, start_lon: float,
+    end_lat: float, end_lon: float,
+    hazards: list,
+    proximity_km: float = 0.1
+) -> list:
+    """
+    Find hazards along route that specifically affect wheelchair users.
+    Filters for wheelchair-specific hazard types.
+    """
+    WHEELCHAIR_HAZARD_TYPES = [
+        "no_wheelchair_access",
+        "broken_footpath",
+        "manhole",
+        "flooding"
+    ]
+
+    # Get all hazards along route
+    all_route_hazards = get_hazards_along_route(
+        start_lat, start_lon,
+        end_lat, end_lon,
+        hazards,
+        proximity_km
+    )
+
+    # Filter only wheelchair relevant hazards
+    wheelchair_hazards = [
+        h for h in all_route_hazards
+        if h.get("type") in WHEELCHAIR_HAZARD_TYPES
+    ]
+
+    return wheelchair_hazards
+
+
+def calculate_wheelchair_route(
+    start_lat: float, start_lon: float,
+    end_lat: float, end_lon: float,
+    hazards: list
+) -> dict:
+    """
+    Calculate wheelchair-safe route comparison.
+    Returns normal route vs wheelchair safe route.
+    """
+    # Normal route distance
+    normal_distance = haversine_distance(
+        start_lat, start_lon,
+        end_lat, end_lon
+    )
+
+    # All hazards on normal route
+    all_route_hazards = get_hazards_along_route(
+        start_lat, start_lon,
+        end_lat, end_lon,
+        hazards
+    )
+
+    # Wheelchair specific hazards on normal route
+    wheelchair_hazards = get_wheelchair_hazards(
+        start_lat, start_lon,
+        end_lat, end_lon,
+        hazards
+    )
+
+    # Wheelchair safe route avoids wheelchair hazards
+    # Adds 25% distance to go around obstacles
+    wheelchair_distance = round(normal_distance * 1.25, 2)
+
+    # Non wheelchair hazards remaining on safe route
+    non_wheelchair_hazards = [
+        h for h in all_route_hazards
+        if h.get("type") not in [
+            "no_wheelchair_access",
+            "broken_footpath",
+            "manhole",
+            "flooding"
+        ]
+    ]
+
+    return {
+        "normal_route": {
+            "distance_km": round(normal_distance, 2),
+            "total_hazards": len(all_route_hazards),
+            "wheelchair_hazards": len(wheelchair_hazards),
+            "penalty_score": calculate_route_safety(all_route_hazards)["penalty_score"]
+        },
+        "wheelchair_safe_route": {
+            "distance_km": wheelchair_distance,
+            "total_hazards": len(non_wheelchair_hazards),
+            "wheelchair_hazards": 0,
+            "penalty_score": calculate_route_safety(non_wheelchair_hazards)["penalty_score"]
+        },
+        "wheelchair_hazards_avoided": len(wheelchair_hazards),
+        "recommendation": "wheelchair_safe_route" if len(wheelchair_hazards) > 0 else "normal_route"
+    }
