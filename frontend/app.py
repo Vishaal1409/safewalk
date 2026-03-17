@@ -244,10 +244,16 @@ st.markdown(
 
 
 # ── API helpers ─────────────────────────────────────────────────────────────
-def fetch_hazards():
-    """Fetch all hazards from the backend."""
+def fetch_hazards(filter_type=None, min_confirmed=None):
+    """Fetch hazards from the backend with optional filters."""
     try:
-        resp = requests.get(f"{API_BASE}/hazards", timeout=5)
+        params = {}
+        if filter_type and filter_type != "All":
+            params["type"] = filter_type.lower()
+        if min_confirmed:
+            params["min_confirmed"] = min_confirmed
+
+        resp = requests.get(f"{API_BASE}/hazards", params=params, timeout=5)
         resp.raise_for_status()
         data = resp.json()
         return data.get("data", data.get("hazards", []))
@@ -319,8 +325,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Fetch data ──────────────────────────────────────────────────────────────
-hazards_raw = fetch_hazards()
+# ── Filters ─────────────────────────────────────────────────────────────────
+col_f1, col_f2 = st.columns([2, 1])
+with col_f1:
+    filter_type = st.selectbox(
+        "🔍 Filter by Hazard Type",
+        options=["All", "manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"],
+        format_func=lambda x: "All Hazards" if x == "All" else HAZARD_CONFIG.get(x, {}).get("label", x)
+    )
+with col_f2:
+    show_confirmed_only = st.checkbox("✅ Confirmed Only")
+
+# Fetch with filters
+hazards_raw = fetch_hazards(
+    filter_type=filter_type,
+    min_confirmed=1 if show_confirmed_only else None
+)
 
 # Handle backend offline
 if hazards_raw is None:
