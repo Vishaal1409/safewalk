@@ -288,10 +288,14 @@ def report_hazard(hazard_type, description, lat, lon, reported_by, image_file=No
         return False, f"Error: {e}"
 
 
-def confirm_hazard(hazard_id):
+def confirm_hazard(hazard_id, confirmed_by="anonymous"):
     """Confirm a hazard (community verification)."""
     try:
-        resp = requests.post(f"{API_BASE}/hazards/{hazard_id}/confirm", timeout=5)
+        resp = requests.post(
+            f"{API_BASE}/hazards/{hazard_id}/confirm",
+            params={"confirmed_by": confirmed_by},
+            timeout=5
+        )
         resp.raise_for_status()
         return True, resp.json()
     except Exception as e:
@@ -482,6 +486,10 @@ with st.sidebar:
         '<div class="sidebar-section">Click the map to set location</div>',
         unsafe_allow_html=True,
     )
+    # Store user name in session
+    user_name = st.text_input("👤 Your Name", placeholder="Enter your name to confirm hazards")
+    if user_name:
+        st.session_state["user_name"] = user_name
 
     clicked_lat = st.session_state.get("clicked_lat", None)
     clicked_lng = st.session_state.get("clicked_lng", None)
@@ -551,7 +559,8 @@ with st.sidebar:
                     f"`✅ {conf} confirmations`"
                 )
                 if st.button(f"Confirm ✅", key=f"confirm_{h['id']}"):
-                    ok, result = confirm_hazard(h["id"])
+                    user_name = st.session_state.get("user_name", "anonymous")
+                    ok, result = confirm_hazard(h["id"], confirmed_by=user_name)
                     if ok:
                         st.success(f"Confirmed! Count: {result.get('confirmed_count', conf + 1)}")
                         st.rerun()

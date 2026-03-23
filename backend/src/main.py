@@ -1,5 +1,5 @@
-from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety, calculate_wheelchair_route
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import io
@@ -8,6 +8,7 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 import uuid
+import html
 from src.routes.auth import router as auth_router
 
 # Load environment variables from .env file
@@ -50,7 +51,9 @@ def health_check():
 def get_hazards(
     latitude: Optional[float] = None,
     longitude: Optional[float] = None,
-    radius: float = 0.01
+    radius: float = 0.01,
+    hazard_type: Optional[str] = Query(None, alias="type"),
+    min_confirmed: Optional[int] = None
 ):
     """
     Fetch hazards from the database.
@@ -61,6 +64,23 @@ def get_hazards(
         # Fetch all hazards from Supabase
         response = supabase.table("hazards").select("*").execute()
         hazards = response.data or []
+        print(f"DEBUG hazard_type: {repr(hazard_type)}", flush=True)
+        if hazard_type:
+            hazard_type = hazard_type.strip().lower()
+            hazards = [h for h in hazards if h.get("type") == hazard_type]
+
+        # Apply minimum confirmed filter
+        if min_confirmed is not None:
+            hazards = [h for h in hazards if h.get("confirmed_count", 0) >= min_confirmed]
+        # Sort by confirmed count (highest first) then by created_at (newest first)
+        hazards = sorted(
+           hazards,
+           key=lambda h: (
+               -(h.get("confirmed_count", 0)),
+               h.get("created_at", "")
+          ),
+          reverse=False
+)
 
         # If no location filter → return everything
         if latitude is None or longitude is None:
@@ -163,9 +183,10 @@ async def create_hazard(
 
     # Save hazard to database
     try:
+        safe_description = html.escape(description)
         hazard_data = {
             "type": type,
-            "description": description,
+            "description": safe_description,
             "latitude": latitude,
             "longitude": longitude,
             "reported_by": reported_by,
@@ -183,17 +204,36 @@ async def create_hazard(
 
 # 4. Confirm a hazard (community verification)
 @app.post("/hazards/{hazard_id}/confirm")
-def confirm_hazard(hazard_id: str):
-    """Increment the confirmed count for a hazard."""
+def confirm_hazard(hazard_id: str, confirmed_by: str = "anonymous"):
+    """
+    Increment confirmed count.
+    Prevents same person confirming same hazard twice.
+    """
     try:
-        # Get current count
+        # Check if hazard exists
         response = supabase.table("hazards").select("confirmed_count").eq("id", hazard_id).execute()
         if not response.data:
             raise HTTPException(status_code=404, detail="Hazard not found")
 
-        current_count = response.data[0]["confirmed_count"]
+        # Check if this person already confirmed this hazard
+        already_confirmed = supabase.table("confirmations").select("id").eq(
+            "hazard_id", hazard_id
+        ).eq("confirmed_by", confirmed_by).execute()
 
-        # Increment by 1
+        if already_confirmed.data:
+            raise HTTPException(
+                status_code=400,
+                detail="You have already confirmed this hazard!"
+            )
+
+        # Add confirmation record
+        supabase.table("confirmations").insert({
+            "hazard_id": hazard_id,
+            "confirmed_by": confirmed_by
+        }).execute()
+
+        # Increment confirmed count
+        current_count = response.data[0]["confirmed_count"]
         supabase.table("hazards").update(
             {"confirmed_count": current_count + 1}
         ).eq("id", hazard_id).execute()
@@ -203,6 +243,9 @@ def confirm_hazard(hazard_id: str):
             "message": "Hazard confirmed!",
             "confirmed_count": current_count + 1
         }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -298,6 +341,40 @@ def get_safe_route(
                 "penalty_score": safe_route_safety["penalty_score"]
             },
             "recommendation": "safe_route" if normal_route_safety["hazard_count"] > 0 else "normal_route"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    # 7. Wheelchair Safe Route
+@app.get("/wheelchair-route")
+def get_wheelchair_route(
+    start_lat: float,
+    start_lon: float,
+    end_lat: float,
+    end_lon: float
+):
+    """
+    Calculate wheelchair-safe route.
+    Avoids broken footpaths, no wheelchair access,
+    manholes and flooding hazards.
+    """
+    try:
+        # Fetch all hazards from Supabase
+        response = supabase.table("hazards").select("*").execute()
+        all_hazards = response.data or []
+
+        # Calculate wheelchair route comparison
+        result = calculate_wheelchair_route(
+            start_lat, start_lon,
+            end_lat, end_lon,
+            all_hazards
+        )
+
+        return {
+            "status": "success",
+            "start": {"lat": start_lat, "lon": start_lon},
+            "end": {"lat": end_lat, "lon": end_lon},
+            **result
         }
 
     except Exception as e:

@@ -1,133 +1,250 @@
 # SafeWalk Design Notes
 
 ## Overview
-SafeWalk is a community-powered navigation app that helps users avoid unsafe walking routes by identifying hazards such as open manholes, flooding, broken footpaths, and poorly lit areas.
+SafeWalk is a community-powered pedestrian safety app designed to help people avoid unsafe walking areas by identifying hazards, reporting issues in real time, and recommending safer routes.
 
-The UI is designed as a **mobile-first interface** with three primary screens.
+The updated design follows a **mobile-first**, **high-fidelity**, and **hackathon-ready** approach with a clean pink safety-themed visual system. The UI is designed to feel polished, trustworthy, modern, and easy to use during fast real-world interactions.
 
 ---
 
-# App Screens
+## Design Goals
 
-## 1. Map View
-Purpose: Display nearby hazards and the overall safety level of the area.
+The redesigned SafeWalk interface focuses on:
 
-Features:
-- Interactive map showing hazard markers
-- Safety score indicator
-- Hazard count and confirmation count
-- Color-coded hazard markers
-- Quick access to report hazards
-- Legend explaining hazard types
+- making safety information easy to understand at a glance
+- helping users report hazards quickly with minimal effort
+- visually emphasizing safer route choices
+- creating a clean, premium interface suitable for demos and judging
+- keeping the UI realistic and practical for frontend implementation
 
-Displayed information:
+---
+
+## Visual Style
+
+### Design Language
+The new UI uses a modern mobile app style with:
+
+- soft rounded cards
+- clear spacing and visual hierarchy
+- polished buttons and chips
+- a safety-focused but friendly appearance
+- consistent layouts across all screens
+
+### Color Palette
+The visual theme uses a pink/rose brand system to make the app feel distinct, modern, and memorable.
+
+- **Primary Brand Color:** Deep pink / rose
+- **Background:** Light soft pink / off-white
+- **Cards:** White
+- **Text:** Dark gray / charcoal
+- **Hazard Colors:**
+  - Red → Dangerous hazards
+  - Blue → Flooding / water issues
+  - Orange → Caution hazards
+  - Purple → Low-light / streetlight-related issues
+  - Green → Safe indicators
+  - Gray → Secondary information
+
+### Typography
+The interface uses a clean sans-serif font with:
+
+- bold headings for strong hierarchy
+- readable labels and values
+- compact but clear supporting text
+- mobile-friendly spacing and sizing
+
+---
+
+# Main Screens
+
+## 1. Map View Screen
+
+### Purpose
+The Map View is the main screen of SafeWalk. It helps users quickly understand nearby safety conditions and view reported hazards in their area.
+
+### Features
+- interactive map with hazard markers
+- safety score summary cards
+- current area safety label
+- total hazard count
+- confirmed hazard count
+- filter controls for hazard types
+- hazard popup cards with details
+- floating action button for reporting hazards
+- bottom navigation bar
+
+### Displayed Information
 - Safety Score
-- Total Hazards
-- Confirmed Hazards
-- Hazard locations on the map
+- Status
+- Hazard Count
+- Confirmed Hazard Count
+- Hazard markers and locations on the map
 
-Marker Colors:
-- Red → Manhole
-- Blue → Flooding
-- Orange → Broken Footpath
-- Purple → No Streetlight
-- Dark Red → Unsafe Area
-- Gray → No Wheelchair Access
+### Hazard Popup Content
+Each hazard marker can show:
+- hazard type
+- short description
+- reporter name
+- confirmation count
+- location details
+- optional hazard image preview
+
+### Design Notes
+The map screen is designed to balance information and clarity. The map remains the main focus, while cards and controls are placed in a way that supports quick decision-making without overwhelming the user.
 
 ---
 
 ## 2. Report Hazard Screen
-Purpose: Allow users to report hazards in their surroundings.
 
-Features:
-- Hazard type selection
-- Description input
-- Photo upload
-- Automatic GPS location detection
-- Submit hazard report button
+### Purpose
+The Report Hazard screen allows users to submit unsafe conditions they encounter while walking.
 
-Hazard types available:
+### Features
+- hazard type selection
+- description field
+- image upload area
+- location selection section
+- interactive location card / preview
+- primary submit button
+- validation-ready structure for user input
+
+### Hazard Types Available
 - Open Manhole
 - Flooding
 - No Streetlight
 - Broken Footpath
 - Unsafe Area
-- No Wheelchair Access
+- No Accessibility / No Wheelchair Access
 
-The report is sent to the backend and stored in the Supabase database.
+### User Flow
+The reporting process is designed to be simple:
 
----
+1. select the hazard type  
+2. add a short description  
+3. upload an image if available  
+4. confirm the location  
+5. submit the report  
 
-## 3. Route Result Screen
-Purpose: Show the safest route between two locations.
-
-Features:
-- Visual route preview on a map
-- Comparison between:
-  - Normal Route
-  - SafeWalk Route
-- Distance and estimated time
-- Hazard count on the route
-- Highlight of the safest route
-
-Displayed route information:
-
-Normal Route
-- Distance
-- Travel Time
-- Number of hazards
-
-SafeWalk Route
-- Distance
-- Travel Time
-- Hazards avoided
-- Marked as the recommended route
-
-Additional section:
-- List of hazards detected on the normal route
-
-Example:
-- Open Manhole — Velachery Main Road
-- Flooding — Anna Salai Junction
-
-Action Button:
-Start Safe Navigation
+### Design Notes
+This screen is designed to feel safe, simple, and actionable. It supports quick reporting while keeping the layout polished and visually consistent with the rest of the app.
 
 ---
 
-# Design Principles
+## 3. Route Comparison Screen
 
-The UI follows these principles:
+### Purpose
+The Route Comparison screen helps users compare a normal route with a safer alternative generated by SafeWalk.
 
-- **Clarity:** Hazard information is easy to understand
-- **Safety-first:** Safe routes are visually highlighted
-- **Minimal interaction:** Reporting hazards takes only a few steps
-- **Community-driven:** Hazard confirmation improves reliability
+### Features
+- start and destination inputs
+- route preview map
+- normal route card
+- SafeWalk route card
+- recommended badge for safer route
+- safety score badge
+- hazards avoided section
+- primary navigation button
+
+### Displayed Route Information
+
+#### Normal Route
+- distance
+- estimated time
+- number of hazards on the route
+
+#### SafeWalk Route
+- distance
+- estimated time
+- lower risk route
+- recommended highlight
+- safety score emphasis
+
+### Hazards Avoided Section
+This section explains why the safer route is better by showing examples of hazards avoided, such as:
+
+- Open Manhole — near bus stop
+- Flooding — major junction
+- No Streetlight — side street
+
+### Design Notes
+This is the most visually persuasive screen in the app. The SafeWalk route is clearly emphasized so users can immediately understand the value of choosing the safer option.
+
+---
+
+# Updated UX Improvements
+
+Compared to the earlier version, the new design improves:
+
+- consistency across all screens
+- visual hierarchy and spacing
+- polish of cards, chips, and buttons
+- clarity of route comparison
+- quality of the reporting flow
+- overall demo readiness
+
+The redesigned UI now feels more like a real product and less like a basic prototype.
+
+---
+
+# Core User Experience Principles
+
+The SafeWalk design follows these principles:
+
+- **Safety-first:** critical hazard information must stand out clearly
+- **Clarity:** users should understand what to do immediately
+- **Trust:** the app should feel reliable and community-driven
+- **Speed:** reporting and route decisions should be quick
+- **Consistency:** all screens should feel part of the same product
 
 ---
 
 # Tools Used
 
-Design Tool:
-Figma
+## Design
+- Google Stitch
+- Figma
 
-Frontend:
-Streamlit + Folium
+## Frontend
+- Streamlit
+- Folium
 
-Backend:
-FastAPI
+## Backend
+- FastAPI
 
-Database & Storage:
-Supabase
+## Database and Storage
+- Supabase
 
 ---
 
-# Figma Wireframe
+# Design Deliverables
 
-Figma Design Link:
-https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe
+The updated UI includes the following high-fidelity mobile screens:
 
-The wireframe includes the complete UI layout for:
 - Map View
 - Report Hazard
-- Route Result
+- Route Comparison
+
+These screens are intended for:
+- design documentation
+- frontend reference
+- README screenshots
+- final demo presentation or demo video
+
+---
+
+# Summary
+
+The redesigned SafeWalk UI presents the app as a polished pedestrian safety product focused on community reporting, hazard awareness, and safer navigation.
+
+The final design direction is:
+- modern
+- mobile-first
+- visually cohesive
+- hackathon-ready
+- practical to implement
+- strong enough for demo and judging
+
+# Figma / Design Link
+
+SafeWalk Figma Wireframe:
+https://www.figma.com/design/GOZJallbNpSrONZJk2yvJs/safewalk-wireframe
