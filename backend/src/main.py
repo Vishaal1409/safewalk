@@ -67,7 +67,7 @@ def get_hazards(
         print(f"DEBUG hazard_type: {repr(hazard_type)}", flush=True)
         if hazard_type:
             hazard_type = hazard_type.strip().lower()
-            hazards = [h for h in hazards if h.get("type") == hazard_type]
+            hazards = [h for h in hazards if h.get("type", "").strip().lower() == hazard_type]
 
         # Apply minimum confirmed filter
         if min_confirmed is not None:
