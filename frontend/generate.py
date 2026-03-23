@@ -1,0 +1,555 @@
+#!/usr/bin/env python3
+"""Generate the SafeWalk index.html file."""
+import os
+
+DIR = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(DIR, "index.html")
+
+part_head = r'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeWalk — Chennai Pedestrian Hazard Map</title>
+<meta name="description" content="SafeWalk is a crowdsourced pedestrian hazard map for Chennai, India. Report and confirm hazards to make walking safer.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--rose-deep:#6D1036;--rose:#BE185D;--pink-light:#FCE7F3;--white:#fff;--slate:#1E293B;
+--glass:rgba(30,41,59,0.72);--glass-border:rgba(190,24,93,0.18);
+--radius:16px;--radius-sm:10px;--radius-xs:6px;--transition:0.22s ease;
+--shadow:0 8px 32px rgba(109,16,54,0.18);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--slate);overflow:hidden;background:#0f0a0c}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rose);border-radius:9px}
+
+/* ===== LOADING SCREEN ===== */
+#loading-screen{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;
+background:linear-gradient(135deg,#1a0a10 0%,#6D1036 40%,#BE185D 100%);overflow:hidden;transition:opacity .6s ease,visibility .6s ease}
+#loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.particle-canvas{position:absolute;inset:0;overflow:hidden}
+.particle{position:absolute;width:4px;height:4px;background:rgba(252,231,243,0.25);border-radius:50%;animation:floatUp linear infinite}
+@keyframes floatUp{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+.loading-logo{font-family:'Syne',sans-serif;font-size:clamp(2.6rem,6vw,4.2rem);font-weight:800;color:var(--white);
+background:linear-gradient(90deg,#fff,#FCE7F3,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+position:relative;overflow:hidden;animation:logoReveal 1.2s ease-out forwards;opacity:0}
+@keyframes logoReveal{0%{opacity:0;transform:translateY(30px) scale(0.9);filter:blur(8px)}
+100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.loading-logo::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:shimmer 2s ease-in-out infinite}
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}
+.tagline{color:rgba(252,231,243,0.8);font-family:'DM Sans',sans-serif;font-size:1.05rem;margin-top:18px;min-height:1.6em;letter-spacing:0.02em}
+.tagline .cursor{display:inline-block;width:2px;height:1.1em;background:var(--pink-light);margin-left:2px;animation:blink .7s step-end infinite;vertical-align:text-bottom}
+@keyframes blink{50%{opacity:0}}
+.progress-wrap{width:min(320px,70vw);height:5px;background:rgba(255,255,255,0.12);border-radius:9px;margin-top:32px;overflow:hidden}
+.progress-bar{height:100%;width:0;background:linear-gradient(90deg,#FCE7F3,#fff);border-radius:9px;transition:width .15s linear}
+
+/* ===== MAP ===== */
+#map{position:fixed;inset:0;z-index:1}
+.leaflet-popup-content-wrapper{border-radius:var(--radius)!important;box-shadow:var(--shadow)!important;border:1px solid var(--glass-border)!important;overflow:hidden}
+.leaflet-popup-content{margin:0!important;min-width:220px}
+.leaflet-popup-tip{border-top-color:var(--white)!important}
+.popup-inner{padding:14px 16px;font-family:'DM Sans',sans-serif}
+.popup-inner .badge{display:inline-block;padding:3px 10px;border-radius:20px;color:#fff;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.popup-inner h4{margin:8px 0 4px;font-family:'Syne',sans-serif;font-size:1rem}
+.popup-inner p{font-size:.85rem;color:#64748b;margin:2px 0}
+.popup-inner img{width:100%;border-radius:var(--radius-sm);margin-top:8px;max-height:140px;object-fit:cover}
+.popup-inner .meta{display:flex;gap:12px;margin-top:6px;font-size:.78rem;color:#94a3b8}
+
+/* ===== SIDEBAR ===== */
+#sidebar{position:fixed;top:16px;left:16px;bottom:16px;width:380px;z-index:500;
+display:flex;flex-direction:column;border-radius:var(--radius);overflow:hidden;
+background:var(--glass);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4);
+border:1px solid var(--glass-border);box-shadow:var(--shadow);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+
+.sidebar-header{position:relative;padding:22px 20px 14px;
+background:linear-gradient(135deg,#1a0a10,#6D1036 70%,#BE185D);overflow:hidden;flex-shrink:0}
+.sidebar-header::before{content:'';position:absolute;inset:0;
+background-image:radial-gradient(rgba(252,231,243,0.12) 1px,transparent 1px);
+background-size:18px 18px;animation:dotShift 20s linear infinite}
+@keyframes dotShift{0%{background-position:0 0}100%{background-position:18px 18px}}
+.sidebar-brand{display:flex;align-items:center;gap:10px}
+.sidebar-brand .logo-icon{width:34px;height:34px;border-radius:10px;
+background:linear-gradient(135deg,#FCE7F3,#fff);display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.sidebar-brand h1{font-family:'Syne',sans-serif;font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-0.02em}
+.live-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;
+background:rgba(252,231,243,0.15);border-radius:20px;font-size:.72rem;color:#FCE7F3;font-weight:600;margin-left:auto}
+.live-dot{width:7px;height:7px;background:#34d399;border-radius:50%;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.5}}
+.header-stats{display:flex;gap:8px;margin-top:12px}
+.stat-pill{flex:1;padding:6px 10px;background:rgba(252,231,243,0.1);border-radius:var(--radius-xs);
+display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat-pill .num{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;color:#fff}
+.stat-pill .label{font-size:.65rem;color:rgba(252,231,243,0.6);text-transform:uppercase;letter-spacing:.06em}
+
+/* Search */
+.search-box{padding:12px 16px 6px;flex-shrink:0}
+.search-input-wrap{position:relative}
+.search-input-wrap input{width:100%;padding:10px 14px 10px 36px;border:1px solid rgba(190,24,93,0.15);
+border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);color:#fff;font-size:.88rem;
+font-family:'DM Sans',sans-serif;outline:none;transition:var(--transition)}
+.search-input-wrap input::placeholder{color:rgba(255,255,255,0.35)}
+.search-input-wrap input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(190,24,93,0.15)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.4);font-size:.9rem;pointer-events:none}
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--slate);border-radius:var(--radius-sm);
+margin-top:4px;max-height:200px;overflow-y:auto;z-index:10;display:none;border:1px solid var(--glass-border)}
+.search-results.show{display:block}
+.search-result-item{padding:10px 14px;cursor:pointer;color:#e2e8f0;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,0.06);transition:var(--transition)}
+.search-result-item:hover{background:rgba(190,24,93,0.15)}
+
+/* Tabs */
+.tabs-bar{display:flex;padding:6px 16px 0;gap:4px;flex-shrink:0}
+.tab-btn{flex:1;padding:9px 0;border:none;background:transparent;color:rgba(255,255,255,0.45);
+font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;
+border-radius:var(--radius-xs) var(--radius-xs) 0 0;transition:var(--transition);position:relative}
+.tab-btn.active{color:#fff;background:rgba(252,231,243,0.08)}
+.tab-btn.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2.5px;background:var(--rose);border-radius:9px}
+.tab-btn:hover:not(.active){color:rgba(255,255,255,0.7)}
+
+.tabs-content{flex:1;overflow-y:auto;overflow-x:hidden;position:relative}
+.tab-panel{display:none;padding:16px;animation:fadeSlide .3s ease}
+.tab-panel.active{display:block}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Form elements */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.78rem;font-weight:600;color:rgba(255,255,255,0.55);
+text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.form-input{width:100%;padding:10px 14px;border:1px solid rgba(190,24,93,0.15);
+border-radius:var(--radius-sm);background:rgba(255,255,255,0.06);color:#fff;font-size:.88rem;
+font-family:'DM Sans',sans-serif;outline:none;transition:var(--transition);resize:vertical}
+.form-input:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(190,24,93,0.15)}
+textarea.form-input{min-height:70px}
+
+/* Hazard type selector */
+.type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.type-option{padding:10px;border-radius:var(--radius-sm);border:1.5px solid rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.04);cursor:pointer;text-align:center;transition:var(--transition);color:rgba(255,255,255,0.7);font-size:.8rem;font-weight:500}
+.type-option:hover{border-color:rgba(190,24,93,0.3);transform:translateY(-1px)}
+.type-option.selected{border-color:var(--rose);background:rgba(190,24,93,0.12);color:#fff}
+.type-option .emoji{font-size:1.3rem;display:block;margin-bottom:3px}
+
+/* Location display */
+.location-display{padding:10px 14px;border-radius:var(--radius-sm);background:rgba(190,24,93,0.08);
+border:1px dashed rgba(190,24,93,0.25);color:rgba(255,255,255,0.65);font-size:.84rem;min-height:38px;
+display:flex;align-items:center;gap:8px}
+.location-display.filled{border-style:solid;border-color:rgba(52,211,153,0.4);background:rgba(52,211,153,0.08);color:#34d399}
+.location-display .loc-icon{font-size:1rem}
+
+/* Buttons */
+.btn{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;
+font-size:.9rem;font-weight:700;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden}
+.btn-primary{background:linear-gradient(135deg,var(--rose-deep),var(--rose));color:#fff;box-shadow:0 4px 16px rgba(190,24,93,0.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(190,24,93,0.4)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-sm{width:auto;padding:8px 18px;font-size:.8rem}
+.btn .spinner{display:none;width:18px;height:18px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.btn.loading .spinner{display:inline-block}
+.btn.loading .btn-text{visibility:hidden}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Photo upload */
+.upload-area{border:2px dashed rgba(190,24,93,0.2);border-radius:var(--radius-sm);padding:20px;
+text-align:center;cursor:pointer;transition:var(--transition);color:rgba(255,255,255,0.4);font-size:.84rem}
+.upload-area:hover{border-color:var(--rose);background:rgba(190,24,93,0.05)}
+.upload-area .icon{font-size:1.6rem;margin-bottom:4px}
+
+/* Confirm cards */
+.hazard-card{padding:14px;border-radius:var(--radius-sm);background:rgba(255,255,255,0.04);
+border:1px solid rgba(255,255,255,0.06);margin-bottom:10px;transition:var(--transition)}
+.hazard-card:hover{border-color:var(--glass-border);box-shadow:0 0 20px rgba(190,24,93,0.08);transform:translateY(-1px)}
+.hazard-card .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.hazard-card .badge{padding:3px 10px;border-radius:20px;color:#fff;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.hazard-card .card-desc{font-size:.85rem;color:rgba(255,255,255,0.7);margin-bottom:8px;line-height:1.45}
+.hazard-card .card-meta{display:flex;gap:12px;font-size:.75rem;color:rgba(255,255,255,0.35);margin-bottom:10px}
+.confirm-btn{padding:8px 16px;border:1.5px solid rgba(52,211,153,0.3);background:rgba(52,211,153,0.08);
+color:#34d399;border-radius:var(--radius-xs);font-size:.8rem;font-weight:600;cursor:pointer;transition:var(--transition);font-family:'DM Sans',sans-serif}
+.confirm-btn:hover{background:rgba(52,211,153,0.15);transform:translateY(-1px)}
+.confirm-btn.confirmed{background:#34d399;color:#fff;border-color:#34d399;pointer-events:none}
+
+/* Safety tab */
+.safety-search{position:relative;margin-bottom:20px}
+.score-display{text-align:center;padding:30px 20px}
+.score-ring{position:relative;width:140px;height:140px;margin:0 auto 16px}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring .bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:8}
+.score-ring .fg{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.2s ease,stroke .4s ease}
+.score-number{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+font-family:'Syne',sans-serif;font-size:2.8rem;font-weight:800;color:#fff}
+.score-label{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.score-sublabel{font-size:.84rem;color:rgba(255,255,255,0.45)}
+
+/* ===== FLOATING SCORE CARD ===== */
+#float-score{position:fixed;top:20px;right:20px;z-index:500;
+padding:16px 22px;border-radius:var(--radius);
+background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+border:1px solid var(--glass-border);box-shadow:var(--shadow);
+display:flex;align-items:center;gap:14px;min-width:180px;transition:var(--transition)}
+#float-score:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(109,16,54,0.25)}
+#float-score .fs-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:#fff}
+#float-score .fs-meta{display:flex;flex-direction:column;gap:1px}
+#float-score .fs-label{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;color:#fff}
+#float-score .fs-sub{font-size:.72rem;color:rgba(255,255,255,0.45)}
+
+/* ===== MAP TOOLTIP ===== */
+.map-click-tooltip{position:absolute;z-index:600;padding:8px 14px;border-radius:var(--radius-xs);
+background:var(--slate);color:#fff;font-size:.82rem;font-family:'DM Sans',sans-serif;
+box-shadow:var(--shadow);pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%);margin-top:-12px;
+opacity:0;transition:opacity .2s ease}
+.map-click-tooltip.show{opacity:1}
+.map-click-tooltip::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid var(--slate)}
+
+/* ===== TOAST ===== */
+.toast-container{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none}
+.toast{padding:12px 22px;border-radius:var(--radius-sm);background:var(--slate);color:#fff;font-size:.88rem;
+font-family:'DM Sans',sans-serif;box-shadow:0 8px 30px rgba(0,0,0,0.3);
+animation:toastIn .35s cubic-bezier(.4,0,.2,1) forwards;pointer-events:auto;border-left:3px solid var(--rose)}
+.toast.success{border-left-color:#34d399}
+.toast.error{border-left-color:#ef4444}
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(20px)}}
+
+/* ===== PULSING MARKER ===== */
+@keyframes markerPulse{0%,100%{box-shadow:0 0 0 0 rgba(190,24,93,0.4)}50%{box-shadow:0 0 0 12px rgba(190,24,93,0)}}
+.marker-new{animation:markerPulse 2s ease-in-out infinite}
+
+/* ===== MOBILE ===== */
+@media(max-width:768px){
+#sidebar{top:auto;left:0;right:0;bottom:0;width:100%;height:55vh;border-radius:var(--radius) var(--radius) 0 0;
+transform:translateY(calc(100% - 52px));transition:transform .35s cubic-bezier(.4,0,.2,1)}
+#sidebar.open{transform:translateY(0)}
+.drawer-handle{display:flex!important;justify-content:center;padding:8px 0;cursor:pointer}
+.drawer-handle span{width:36px;height:4px;background:rgba(255,255,255,0.3);border-radius:9px}
+#float-score{top:auto;bottom:70px;right:12px;left:12px;min-width:auto}
+}
+.drawer-handle{display:none}
+</style>
+</head>
+'''
+
+part_body = r'''<body>
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+<div class="particle-canvas" id="particles"></div>
+<div class="loading-logo">SafeWalk</div>
+<div class="tagline"><span id="typewriter"></span><span class="cursor"></span></div>
+<div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- FLOATING SCORE -->
+<div id="float-score" style="display:none">
+<div class="fs-num" id="fs-num">—</div>
+<div class="fs-meta"><span class="fs-label" id="fs-label">Safety Score</span><span class="fs-sub" id="fs-sub">Click map to check</span></div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+<div class="drawer-handle" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span></div>
+<div class="sidebar-header">
+<div class="sidebar-brand">
+<div class="logo-icon">🚶</div>
+<h1>SafeWalk</h1>
+<div class="live-badge"><span class="live-dot"></span><span id="live-count">0</span> hazards</div>
+</div>
+<div class="header-stats">
+<div class="stat-pill"><span class="num" id="stat-total">0</span><span class="label">Total</span></div>
+<div class="stat-pill"><span class="num" id="stat-confirmed">0</span><span class="label">Confirmed</span></div>
+</div>
+</div>
+<div class="search-box">
+<div class="search-input-wrap">
+<span class="search-icon">🔍</span>
+<input type="text" id="search-input" placeholder="Search Chennai area..." autocomplete="off">
+<div class="search-results" id="search-results"></div>
+</div>
+</div>
+<div class="tabs-bar">
+<button class="tab-btn active" data-tab="report">📝 Report</button>
+<button class="tab-btn" data-tab="confirm">✅ Confirm</button>
+<button class="tab-btn" data-tab="safety">🛡 Safety</button>
+</div>
+<div class="tabs-content">
+<!-- REPORT TAB -->
+<div class="tab-panel active" id="tab-report">
+<div class="form-group"><label>Hazard Type</label>
+<div class="type-grid">
+<div class="type-option" data-type="manhole" data-color="#DC2626"><span class="emoji">🕳️</span>Manhole</div>
+<div class="type-option" data-type="flooding" data-color="#2563EB"><span class="emoji">🌊</span>Flooding</div>
+<div class="type-option" data-type="no_light" data-color="#7C3AED"><span class="emoji">🌑</span>No Light</div>
+<div class="type-option" data-type="broken_footpath" data-color="#D97706"><span class="emoji">🚧</span>Broken Path</div>
+<div class="type-option" data-type="unsafe_area" data-color="#9D174D"><span class="emoji">⚠️</span>Unsafe Area</div>
+<div class="type-option" data-type="no_wheelchair_access" data-color="#64748B"><span class="emoji">♿</span>No Access</div>
+</div></div>
+<div class="form-group"><label>Description</label><textarea class="form-input" id="report-desc" placeholder="Describe the hazard..."></textarea></div>
+<div class="form-group"><label>Detected Location</label><div class="location-display" id="loc-display"><span class="loc-icon">📍</span><span id="loc-text">Click on the map to select location</span></div></div>
+<div class="form-group"><label>Your Name</label><input class="form-input" id="report-name" placeholder="Enter your name"></div>
+<div class="form-group"><label>Photo (optional)</label>
+<label class="upload-area" for="report-photo"><div class="icon">📷</div>Click to upload photo<input type="file" id="report-photo" accept="image/*" style="display:none"></label>
+<div id="photo-name" style="color:rgba(255,255,255,0.5);font-size:.8rem;margin-top:4px"></div></div>
+<button class="btn btn-primary" id="submit-report"><span class="btn-text">Submit Report</span><span class="spinner"></span></button>
+</div>
+<!-- CONFIRM TAB -->
+<div class="tab-panel" id="tab-confirm">
+<div id="confirm-list"><p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">Loading hazards...</p></div>
+</div>
+<!-- SAFETY TAB -->
+<div class="tab-panel" id="tab-safety">
+<div class="safety-search form-group"><label>Search Area</label><input class="form-input" id="safety-area" placeholder="Type an area name...">
+<div class="search-results" id="safety-results"></div></div>
+<div class="score-display" id="score-display" style="display:none">
+<div class="score-ring"><svg viewBox="0 0 160 160"><circle class="bg" cx="80" cy="80" r="70"/><circle class="fg" id="score-fg" cx="80" cy="80" r="70" stroke-dasharray="439.82" stroke-dashoffset="439.82"/></svg><div class="score-number" id="score-num">0</div></div>
+<div class="score-label" id="score-lbl">—</div>
+<div class="score-sublabel" id="score-nearby">—</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+'''
+
+part_js = r'''<script>
+const API='http://localhost:8000';
+const HAZARD_COLORS={manhole:'#DC2626',flooding:'#2563EB',no_light:'#7C3AED',broken_footpath:'#D97706',unsafe_area:'#9D174D',no_wheelchair_access:'#64748B'};
+const HAZARD_EMOJI={manhole:'🕳️',flooding:'🌊',no_light:'🌑',broken_footpath:'🚧',unsafe_area:'⚠️',no_wheelchair_access:'♿'};
+let map,markers=[],clickMarker=null,clickCoords=null,allHazards=[];
+
+/* ===== LOADING SCREEN ===== */
+(function initLoading(){
+const pc=document.getElementById('particles');
+for(let i=0;i<40;i++){const p=document.createElement('div');p.className='particle';
+p.style.left=Math.random()*100+'%';p.style.animationDuration=(4+Math.random()*6)+'s';
+p.style.animationDelay=Math.random()*5+'s';p.style.width=p.style.height=(2+Math.random()*4)+'px';pc.appendChild(p)}
+const txt='Making Chennai Safer, One Step At A Time';const tw=document.getElementById('typewriter');
+let ci=0;const typeInt=setInterval(()=>{if(ci<txt.length){tw.textContent+=txt[ci];ci++}else clearInterval(typeInt)},55);
+const pb=document.getElementById('progress-bar');let pw=0;
+const progInt=setInterval(()=>{pw=Math.min(pw+Math.random()*6+1,100);pb.style.width=pw+'%';
+if(pw>=100)clearInterval(progInt)},60);
+setTimeout(()=>{document.getElementById('loading-screen').classList.add('hidden');initApp()},2800);
+})();
+
+/* ===== INIT APP ===== */
+function initApp(){
+const bounds=L.latLngBounds([12.85,80.05],[13.35,80.50]);
+map=L.map('map',{center:[13.0827,80.2707],zoom:13,maxBounds:bounds,maxBoundsViscosity:1.0,
+minZoom:12,zoomControl:false});
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+L.control.zoom({position:'bottomright'}).addTo(map);
+document.getElementById('float-score').style.display='flex';
+
+map.on('click',async e=>{
+clickCoords={lat:e.latlng.lat,lng:e.latlng.lng};
+if(clickMarker)map.removeLayer(clickMarker);
+const icon=L.divIcon({className:'',html:`<div style="width:20px;height:20px;background:var(--rose);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);animation:markerPulse 1.5s infinite"></div>`,iconSize:[20,20],iconAnchor:[10,10]});
+clickMarker=L.marker(e.latlng,{icon}).addTo(map);
+// show tooltip
+let ttip=document.querySelector('.map-click-tooltip');
+if(!ttip){ttip=document.createElement('div');ttip.className='map-click-tooltip';document.getElementById('map').appendChild(ttip)}
+const pt=map.latLngToContainerPoint(e.latlng);
+ttip.style.left=pt.x+'px';ttip.style.top=pt.y+'px';ttip.textContent='Detecting location...';ttip.classList.add('show');
+try{
+const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${e.latlng.lat}&lon=${e.latlng.lng}&format=json&addressdetails=1`);
+const d=await r.json();
+const name=d.display_name?d.display_name.split(',').slice(0,3).join(', '):`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+document.getElementById('loc-text').textContent=name;
+document.getElementById('loc-display').classList.add('filled');
+ttip.textContent=name;
+setTimeout(()=>ttip.classList.remove('show'),3000);
+}catch{document.getElementById('loc-text').textContent=`${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+document.getElementById('loc-display').classList.add('filled');ttip.classList.remove('show')}
+fetchScoreAt(e.latlng.lat,e.latlng.lng);
+});
+
+initTabs();initReport();initSearch();initSafetySearch();loadHazards();
+setInterval(loadHazards,60000);
+}
+
+/* ===== TABS ===== */
+function initTabs(){
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.tab-panel').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+if(b.dataset.tab==='confirm')renderConfirmList();
+}));
+}
+
+/* ===== LOAD HAZARDS ===== */
+async function loadHazards(){
+try{const r=await fetch(API+'/hazards');allHazards=await r.json();renderMarkers();updateStats()}
+catch(e){console.error('Load hazards error',e)}}
+
+function updateStats(){
+document.getElementById('live-count').textContent=allHazards.length;
+document.getElementById('stat-total').textContent=allHazards.length;
+const conf=allHazards.reduce((s,h)=>s+(h.confirmed_count||0),0);
+document.getElementById('stat-confirmed').textContent=conf;
+}
+
+function renderMarkers(){
+markers.forEach(m=>map.removeLayer(m));markers=[];
+allHazards.forEach(h=>{
+const c=HAZARD_COLORS[h.type]||'#BE185D';
+const isNew=h.created_at&&(Date.now()-new Date(h.created_at).getTime()<3600000);
+const html=`<div style="width:18px;height:18px;background:${c};border:2.5px solid #fff;border-radius:50%;
+box-shadow:0 0 8px ${c}88;transition:transform .2s;cursor:pointer" class="${isNew?'marker-new':''}"
+onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform='scale(1)'"></div>`;
+const icon=L.divIcon({className:'',html,iconSize:[18,18],iconAnchor:[9,9]});
+const m=L.marker([h.latitude,h.longitude],{icon}).addTo(map);
+let popupHtml=`<div class="popup-inner"><span class="badge" style="background:${c}">${HAZARD_EMOJI[h.type]||''} ${(h.type||'').replace(/_/g,' ')}</span>
+<h4>${h.description||'No description'}</h4><div class="meta"><span>👤 ${h.reported_by||'Anon'}</span><span>✅ ${h.confirmed_count||0}</span></div>`;
+if(h.photo_url)popupHtml+=`<img src="${API}${h.photo_url}" alt="hazard photo" onerror="this.style.display='none'">`;
+popupHtml+=`</div>`;
+m.bindPopup(popupHtml,{maxWidth:280});markers.push(m);
+});
+}
+
+/* ===== REPORT ===== */
+function initReport(){
+document.querySelectorAll('.type-option').forEach(o=>o.addEventListener('click',()=>{
+document.querySelectorAll('.type-option').forEach(x=>x.classList.remove('selected'));o.classList.add('selected')}));
+document.getElementById('report-photo').addEventListener('change',e=>{
+const f=e.target.files[0];document.getElementById('photo-name').textContent=f?f.name:''});
+document.getElementById('submit-report').addEventListener('click',submitReport);
+}
+async function submitReport(){
+const typeEl=document.querySelector('.type-option.selected');
+if(!typeEl)return toast('Select a hazard type','error');
+if(!clickCoords)return toast('Click on the map to select location','error');
+const desc=document.getElementById('report-desc').value.trim();
+const name=document.getElementById('report-name').value.trim();
+if(!desc)return toast('Enter a description','error');
+if(!name)return toast('Enter your name','error');
+const btn=document.getElementById('submit-report');btn.classList.add('loading');btn.disabled=true;
+const fd=new FormData();
+fd.append('type',typeEl.dataset.type);fd.append('description',desc);
+fd.append('latitude',clickCoords.lat);fd.append('longitude',clickCoords.lng);fd.append('reported_by',name);
+const photo=document.getElementById('report-photo').files[0];
+if(photo)fd.append('image',photo);
+try{const r=await fetch(API+'/hazards',{method:'POST',body:fd});
+if(!r.ok)throw new Error('Failed');
+toast('Hazard reported successfully! 🎯','success');
+document.getElementById('report-desc').value='';document.getElementById('report-name').value='';
+document.querySelectorAll('.type-option').forEach(x=>x.classList.remove('selected'));
+document.getElementById('report-photo').value='';document.getElementById('photo-name').textContent='';
+if(clickMarker){map.removeLayer(clickMarker);clickMarker=null}
+document.getElementById('loc-display').classList.remove('filled');
+document.getElementById('loc-text').textContent='Click on the map to select location';clickCoords=null;
+loadHazards();
+}catch(e){toast('Failed to submit report','error')}
+finally{btn.classList.remove('loading');btn.disabled=false}
+}
+
+/* ===== CONFIRM ===== */
+function renderConfirmList(){
+const list=document.getElementById('confirm-list');
+if(!allHazards.length){list.innerHTML='<p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">No hazards yet</p>';return}
+list.innerHTML=allHazards.map(h=>{const c=HAZARD_COLORS[h.type]||'#BE185D';
+return`<div class="hazard-card"><div class="card-top"><span class="badge" style="background:${c}">${HAZARD_EMOJI[h.type]||''} ${(h.type||'').replace(/_/g,' ')}</span></div>
+<div class="card-desc">${h.description||'—'}</div>
+<div class="card-meta"><span>👤 ${h.reported_by||'Anon'}</span><span>✅ ${h.confirmed_count||0} confirms</span></div>
+<button class="confirm-btn" onclick="confirmHazard(${h.id},this)">👍 Confirm</button></div>`}).join('');
+}
+async function confirmHazard(id,btn){
+const name=prompt('Enter your name to confirm:');if(!name)return;
+try{const r=await fetch(`${API}/hazards/${id}/confirm`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirmed_by:name})});
+if(!r.ok)throw new Error();btn.textContent='✓ Confirmed';btn.classList.add('confirmed');
+toast('Hazard confirmed! 👍','success');loadHazards()}
+catch(e){toast('Failed to confirm','error')}}
+
+/* ===== SEARCH ===== */
+function initSearch(){
+let timer;const inp=document.getElementById('search-input'),res=document.getElementById('search-results');
+inp.addEventListener('input',()=>{clearTimeout(timer);const q=inp.value.trim();
+if(q.length<3){res.classList.remove('show');return}
+timer=setTimeout(async()=>{try{
+const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' Chennai')}&format=json&limit=5&bounded=1&viewbox=80.05,12.85,80.50,13.35`);
+const d=await r.json();
+if(!d.length){res.classList.remove('show');return}
+res.innerHTML=d.map(i=>`<div class="search-result-item" data-lat="${i.lat}" data-lon="${i.lon}">${i.display_name.split(',').slice(0,3).join(', ')}</div>`).join('');
+res.classList.add('show');
+res.querySelectorAll('.search-result-item').forEach(it=>it.addEventListener('click',()=>{
+map.flyTo([parseFloat(it.dataset.lat),parseFloat(it.dataset.lon)],16,{duration:1.2});
+inp.value=it.textContent;res.classList.remove('show')}));
+}catch{}},400)});
+document.addEventListener('click',e=>{if(!e.target.closest('.search-input-wrap'))res.classList.remove('show')});
+}
+
+/* ===== SAFETY SEARCH ===== */
+function initSafetySearch(){
+let timer;const inp=document.getElementById('safety-area'),res=document.getElementById('safety-results');
+inp.addEventListener('input',()=>{clearTimeout(timer);const q=inp.value.trim();
+if(q.length<3){res.classList.remove('show');return}
+timer=setTimeout(async()=>{try{
+const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' Chennai')}&format=json&limit=5&bounded=1&viewbox=80.05,12.85,80.50,13.35`);
+const d=await r.json();
+if(!d.length){res.classList.remove('show');return}
+res.innerHTML=d.map(i=>`<div class="search-result-item" data-lat="${i.lat}" data-lon="${i.lon}">${i.display_name.split(',').slice(0,3).join(', ')}</div>`).join('');
+res.classList.add('show');
+res.querySelectorAll('.search-result-item').forEach(it=>it.addEventListener('click',()=>{
+const lat=parseFloat(it.dataset.lat),lon=parseFloat(it.dataset.lon);
+inp.value=it.textContent;res.classList.remove('show');
+map.flyTo([lat,lon],16,{duration:1.2});
+fetchSafetyScore(lat,lon);
+}));
+}catch{}},400)});
+document.addEventListener('click',e=>{if(!e.target.closest('.safety-search'))res.classList.remove('show')});
+}
+async function fetchSafetyScore(lat,lon){
+const disp=document.getElementById('score-display');disp.style.display='block';
+try{const r=await fetch(`${API}/safety-score?latitude=${lat}&longitude=${lon}&radius=500`);
+const d=await r.json();
+animateScore(d.safety_score||0);
+const fg=document.getElementById('score-fg');
+const circ=439.82;const offset=circ-(circ*(d.safety_score||0)/100);
+fg.style.strokeDashoffset=offset;
+let col='#34d399';if(d.safety_score<40)col='#ef4444';else if(d.safety_score<70)col='#f59e0b';
+fg.style.stroke=col;
+document.getElementById('score-lbl').textContent=d.safety_label||'Unknown';
+document.getElementById('score-lbl').style.color=col;
+document.getElementById('score-nearby').textContent=`${d.nearby_hazards_count||0} hazards nearby`;
+}catch(e){toast('Failed to get safety score','error')}}
+
+function animateScore(target){
+const el=document.getElementById('score-num');let cur=0;
+const step=()=>{cur+=Math.ceil((target-cur)/10);if(cur>=target){el.textContent=target;return}
+el.textContent=cur;requestAnimationFrame(step)};step();}
+
+async function fetchScoreAt(lat,lng){
+try{const r=await fetch(`${API}/safety-score?latitude=${lat}&longitude=${lng}&radius=500`);
+const d=await r.json();
+document.getElementById('fs-num').textContent=d.safety_score??'—';
+document.getElementById('fs-label').textContent=d.safety_label||'Safety Score';
+document.getElementById('fs-sub').textContent=`${d.nearby_hazards_count||0} hazards nearby`;
+let col='#34d399';if(d.safety_score<40)col='#ef4444';else if(d.safety_score<70)col='#f59e0b';
+document.getElementById('fs-num').style.color=col;
+}catch{}}
+
+/* ===== TOAST ===== */
+function toast(msg,type='info'){
+const t=document.createElement('div');t.className='toast '+(type||'');t.textContent=msg;
+document.getElementById('toast-container').appendChild(t);
+setTimeout(()=>{t.style.animation='toastOut .3s forwards';setTimeout(()=>t.remove(),300)},3000)}
+</script>
+</body></html>
+'''
+
+with open(OUT,'w',encoding='utf-8') as f:
+    f.write(part_head)
+    f.write(part_body)
+    f.write(part_js)
+
+print(f"✅ Generated {OUT}")

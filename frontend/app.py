@@ -1,10 +1,8 @@
 import streamlit as st
 import folium
 from folium.plugins import LocateControl, MarkerCluster
-from folium.utilities import JsCode
 from streamlit_folium import st_folium
 import requests
-import json
 import html
 
 # ── Config ──────────────────────────────────────────────────────────────────
@@ -18,9 +16,6 @@ HAZARD_CONFIG = {
     "broken_footpath": {"icon": "road", "color": "orange", "label": "Broken Footpath"},
     "unsafe_area": {"icon": "triangle-exclamation", "color": "darkred", "label": "Unsafe Area"},
     "no_wheelchair_access": {"icon": "wheelchair-move", "color": "gray", "label": "No Wheelchair Access"},
-    "other": {"icon": "circle-info", "color": "gray", "label": "Other"},
-    "POTHOLE": {"icon": "circle-exclamation", "color": "orange", "label": "Pothole"},
-    "FLOODING": {"icon": "water", "color": "blue", "label": "Flooding (Caps)"},
 }
 
 st.set_page_config(
@@ -30,37 +25,40 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Styling ─────────────────────────────────────────────────────────────────
+# ── Styling — Ishitha's Pink Theme ──────────────────────────────────────────
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
     :root {
-        --bg-primary: #0b0e14;
-        --bg-card: #131720;
-        --bg-input: #1a1f2e;
-        --border: #232a3b;
-        --text-primary: #e8ecf4;
-        --text-muted: #6b7a99;
-        --accent-amber: #f0a500;
-        --accent-red: #e63946;
-        --accent-green: #2ec4b6;
-        --accent-blue: #4895ef;
+        --bg-primary: #FCE7F3;
+        --bg-card: #ffffff;
+        --bg-input: #fdf2f8;
+        --border: #f9a8d4;
+        --text-primary: #334155;
+        --text-muted: #64748B;
+        --accent-pink: #DB2777;
+        --accent-dark-pink: #9D174D;
+        --accent-red: #DC2626;
+        --accent-orange: #D97706;
+        --accent-green: #16A34A;
+        --accent-blue: #3B82F6;
     }
 
     .stApp {
         background: var(--bg-primary);
-        font-family: 'Barlow', sans-serif;
+        font-family: 'Poppins', sans-serif;
     }
 
     /* Sidebar */
     section[data-testid="stSidebar"] {
-        background: var(--bg-card) !important;
-        border-right: 1px solid var(--border);
+        background: #9D174D !important;
+        border-right: 2px solid #DB2777;
     }
     section[data-testid="stSidebar"] * {
-        font-family: 'Barlow', sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
+        color: #ffffff !important;
     }
 
     /* Hide default header */
@@ -80,27 +78,29 @@ st.markdown(
         align-items: center;
         gap: 14px;
         margin-bottom: 0.8rem;
-        padding-bottom: 0.8rem;
-        border-bottom: 1px solid var(--border);
+        padding: 1rem 1.2rem;
+        background: #9D174D;
+        border-radius: 12px;
+        border-bottom: 2px solid #DB2777;
     }
     .safewalk-logo {
-        font-family: 'Barlow', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 800;
-        font-size: 1.7rem;
-        color: var(--accent-amber);
+        font-size: 1.9rem;
+        color: #ffffff;
         letter-spacing: -0.5px;
     }
     .safewalk-logo span {
-        color: var(--text-primary);
+        color: #fbcfe8;
         font-weight: 500;
     }
     .safewalk-tagline {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.72rem;
-        color: var(--text-muted);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.75rem;
+        color: #fbcfe8;
         letter-spacing: 1.5px;
         text-transform: uppercase;
-        margin-top: 4px;
+        margin-top: 2px;
     }
 
     /* Safety score cards */
@@ -113,12 +113,13 @@ st.markdown(
         flex: 1;
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 12px 16px;
         text-align: center;
+        box-shadow: 0 2px 8px rgba(219,39,119,0.08);
     }
     .score-card .label {
-        font-family: 'JetBrains Mono', monospace;
+        font-family: 'Poppins', sans-serif;
         font-size: 0.65rem;
         color: var(--text-muted);
         text-transform: uppercase;
@@ -126,30 +127,30 @@ st.markdown(
         margin-bottom: 4px;
     }
     .score-card .value {
-        font-family: 'Barlow', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 700;
         font-size: 1.35rem;
     }
     .value-green { color: var(--accent-green); }
-    .value-amber { color: var(--accent-amber); }
+    .value-pink { color: var(--accent-pink); }
     .value-red { color: var(--accent-red); }
     .value-blue { color: var(--accent-blue); }
 
     /* Sidebar form styling */
     .sidebar-title {
-        font-family: 'Barlow', sans-serif;
+        font-family: 'Poppins', sans-serif;
         font-weight: 700;
-        font-size: 1.15rem;
-        color: var(--accent-amber);
+        font-size: 1.1rem;
+        color: #ffffff;
         letter-spacing: 0.5px;
         margin-bottom: 0.3rem;
         padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid #DB2777;
     }
     .sidebar-section {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.68rem;
-        color: var(--text-muted);
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.72rem;
+        color: #fbcfe8;
         text-transform: uppercase;
         letter-spacing: 2px;
         margin-top: 1.2rem;
@@ -168,11 +169,13 @@ st.markdown(
         align-items: center;
         gap: 8px;
         padding: 6px 10px;
-        background: var(--bg-input);
-        border-radius: 6px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
         font-size: 0.78rem;
         color: var(--text-primary);
-        font-family: 'Barlow', sans-serif;
+        font-family: 'Poppins', sans-serif;
+        box-shadow: 0 1px 4px rgba(219,39,119,0.06);
     }
     .legend-dot {
         width: 10px;
@@ -183,31 +186,56 @@ st.markdown(
 
     /* Map container */
     iframe {
-        border-radius: 10px !important;
-        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
+        border: 2px solid var(--border) !important;
     }
 
     /* Streamlit widget overrides */
     .stSelectbox label, .stTextArea label, .stNumberInput label,
     .stFileUploader label, .stTextInput label {
-        font-family: 'Barlow', sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
         font-weight: 500 !important;
-        color: var(--text-primary) !important;
+        color: #ffffff !important;
         font-size: 0.85rem !important;
     }
 
     .stButton > button {
-        font-family: 'Barlow', sans-serif !important;
+        font-family: 'Poppins', sans-serif !important;
         font-weight: 600 !important;
         letter-spacing: 0.5px;
         border-radius: 8px !important;
+        background-color: #DB2777 !important;
+        color: white !important;
+        border: none !important;
+    }
+
+    .stButton > button:hover {
+        background-color: #9D174D !important;
     }
 
     div[data-testid="stMetric"] {
         background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 10px;
         padding: 12px;
+        box-shadow: 0 2px 8px rgba(219,39,119,0.08);
+    }
+
+    /* Success/Error/Info messages */
+    .stSuccess {
+        background: #dcfce7 !important;
+        border: 1px solid #16A34A !important;
+        border-radius: 8px !important;
+    }
+    .stError {
+        background: #fee2e2 !important;
+        border: 1px solid #DC2626 !important;
+        border-radius: 8px !important;
+    }
+    .stInfo {
+        background: #fdf2f8 !important;
+        border: 1px solid #DB2777 !important;
+        border-radius: 8px !important;
     }
     </style>
     """,
@@ -215,14 +243,23 @@ st.markdown(
 )
 
 
-def fetch_hazards():
+# ── API helpers ─────────────────────────────────────────────────────────────
+def fetch_hazards(filter_type=None, min_confirmed=None):
+    """Fetch hazards from the backend with optional filters."""
     try:
-        resp = requests.get(f"{API_BASE}/hazards", timeout=5)
+        params = {}
+        if filter_type and filter_type != "All":
+            params["type"] = filter_type.lower()
+        if min_confirmed:
+            params["min_confirmed"] = min_confirmed
+
+        resp = requests.get(f"{API_BASE}/hazards", params=params, timeout=5)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("data", [])
-    except Exception as e:
-        print("Error fetching hazards:", e)
+        return data.get("data", data.get("hazards", []))
+    except requests.exceptions.ConnectionError:
+        return None
+    except Exception:
         return []
 
 
@@ -288,18 +325,38 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Fetch data ──────────────────────────────────────────────────────────────
-hazards = fetch_hazards()
+# ── Filters ─────────────────────────────────────────────────────────────────
+col_f1, col_f2 = st.columns([2, 1])
+with col_f1:
+    filter_type = st.selectbox(
+        "🔍 Filter by Hazard Type",
+        options=["All", "manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"],
+        format_func=lambda x: "All Hazards" if x == "All" else HAZARD_CONFIG.get(x, {}).get("label", x)
+    )
+with col_f2:
+    show_confirmed_only = st.checkbox("✅ Confirmed Only")
+
+# Fetch with filters
+hazards_raw = fetch_hazards(
+    filter_type=filter_type,
+    min_confirmed=1 if show_confirmed_only else None
+)
+
+# Handle backend offline
+if hazards_raw is None:
+    st.error("⚠️ Backend is not running. Please start the FastAPI server first.")
+    st.stop()
+
+hazards = hazards_raw if hazards_raw else []
+
+if len(hazards) == 0:
+    st.warning("No hazards found in this area yet. Be the first to report one!")
+
 safety = fetch_safety_score(CHENNAI_CENTER[0], CHENNAI_CENTER[1])
 
 # ── Score strip ─────────────────────────────────────────────────────────────
 score_val = safety["safety_score"] if safety else "—"
 score_label = safety["safety_label"] if safety else "Offline"
-status_color = {
-    "Safe": "#2ec4b6",
-    "Moderate": "#f0a500",
-    "Dangerous": "#e63946"
-}.get(score_label, "#6b7a99")
 hazard_count = len(hazards)
 confirmed = sum(1 for h in hazards if h.get("confirmed_count", 0) > 0)
 
@@ -307,11 +364,11 @@ if isinstance(score_val, (int, float)):
     if score_val >= 80:
         score_class = "value-green"
     elif score_val >= 60:
-        score_class = "value-amber"
+        score_class = "value-pink"
     else:
         score_class = "value-red"
 else:
-    score_class = "value-amber"
+    score_class = "value-pink"
 
 st.markdown(
     f"""
@@ -322,7 +379,7 @@ st.markdown(
         </div>
         <div class="score-card">
             <div class="label">Status</div>
-            <div class="value" style="font-size:0.95rem;color:{status_color};">{score_label}</div>
+            <div class="value value-pink" style="font-size:0.95rem;">{score_label}</div>
         </div>
         <div class="score-card">
             <div class="label">Hazards</div>
@@ -341,30 +398,21 @@ st.markdown(
 m = folium.Map(
     location=CHENNAI_CENTER,
     zoom_start=12,
-    tiles="CartoDB dark_matter",
+    tiles="CartoDB positron",
     control_scale=True,
 )
 LocateControl(auto_start=False, strings={"title": "Find me"}).add_to(m)
 
-# Add marker cluster with 500m fixed radius
-cluster_radius_js = JsCode("""
-function(zoom) {
-    var lat = 13.0827;
-    var metersPerPixel = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
-    return 500 / metersPerPixel;
-}
-""")
-marker_cluster = MarkerCluster(options={"maxClusterRadius": cluster_radius_js}).add_to(m)
+marker_cluster = MarkerCluster().add_to(m)
 
 # Add hazard markers
 for h in hazards:
     lat = h.get("latitude")
     lon = h.get("longitude")
-
     if lat is None or lon is None:
         continue
 
-    h_type = str(h.get("type", "unknown")).strip().lower()
+    h_type = h.get("type", "unknown")
     cfg = HAZARD_CONFIG.get(h_type, {"icon": "circle-info", "color": "gray", "label": h_type})
     conf_count = h.get("confirmed_count", 0)
 
@@ -376,17 +424,17 @@ for h in hazards:
         photo_html = f'<img src="{h["photo_url"]}" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-top:8px;">'
 
     popup_html = f"""
-    <div style="font-family:Barlow,sans-serif;min-width:200px;max-width:260px;">
-        <div style="font-weight:700;font-size:14px;color:#1a1a2e;margin-bottom:4px;">
+    <div style="font-family:Poppins,sans-serif;min-width:200px;max-width:260px;padding:4px;">
+        <div style="font-weight:700;font-size:13px;color:#9D174D;margin-bottom:4px;">
             {cfg['label']}
         </div>
-        <div style="font-size:12px;color:#444;margin-bottom:6px;">
+        <div style="font-size:12px;color:#334155;margin-bottom:6px;">
             {safe_desc}
         </div>
-        <div style="font-size:11px;color:#888;margin-bottom:4px;">
-            Reported by <b>{safe_reporter}</b>
+        <div style="font-size:11px;color:#64748B;margin-bottom:4px;">
+            Reported by <b style="color:#DB2777;">{safe_reporter}</b>
         </div>
-        <div style="display:flex;gap:12px;font-size:11px;color:#666;">
+        <div style="display:flex;gap:12px;font-size:11px;color:#64748B;">
             <span>✅ {conf_count} confirmed</span>
             <span>📍 {lat:.4f}, {lon:.4f}</span>
         </div>
@@ -398,85 +446,38 @@ for h in hazards:
         location=[lat, lon],
         popup=folium.Popup(popup_html, max_width=280),
         tooltip=cfg["label"],
-        icon=folium.Icon(
-            color=cfg["color"],
-            icon=cfg["icon"],
-            prefix="fa"
-        )
+        icon=folium.Icon(color=cfg["color"])
     ).add_to(marker_cluster)
-    
-    # Escape description to prevent HTML injection clipping popups
-    safe_desc = html.escape(h.get('description', 'No description'))
-    safe_reporter = html.escape(h.get('reported_by', 'anonymous'))
-
-    photo_html = ""
-    if h.get("photo_url"):
-        photo_html = f'<img src="{h["photo_url"]}" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-top:8px;">'
-
-    popup_html = f"""
-    <div style="font-family:Barlow,sans-serif;min-width:200px;max-width:260px;">
-        <div style="font-weight:700;font-size:14px;color:#1a1a2e;margin-bottom:4px;">
-            {cfg['label']}
-        </div>
-        <div style="font-size:12px;color:#444;margin-bottom:6px;">
-            {safe_desc}
-        </div>
-        <div style="font-size:11px;color:#888;margin-bottom:4px;">
-            Reported by <b>{safe_reporter}</b>
-        </div>
-        <div style="display:flex;gap:12px;font-size:11px;color:#666;">
-            <span>✅ {conf_count} confirmed</span>
-            <span>📍 {lat:.4f}, {lon:.4f}</span>
-        </div>
-        {photo_html}
-    </div>
-    """
-
-    folium.Marker(
-    location=[lat, lon],
-    popup=folium.Popup(popup_html, max_width=280),
-    tooltip=cfg["label"],
-
 
 # Render map
 map_data = st_folium(m, height=560, use_container_width=True, returned_objects=["last_clicked"])
 
-# Store clicked location
 if map_data and map_data.get("last_clicked"):
     st.session_state["clicked_lat"] = map_data["last_clicked"]["lat"]
     st.session_state["clicked_lng"] = map_data["last_clicked"]["lng"]
 
 # ── Legend ──────────────────────────────────────────────────────────────────
 COLOR_MAP = {
-    "red": "#e63946",
-    "blue": "#4895ef",
+    "red": "#DC2626",
+    "blue": "#3B82F6",
     "darkpurple": "#7b2d8e",
-    "orange": "#f0a500",
-    "darkred": "#9b1d20",
-    "gray": "#6b7a99",
+    "orange": "#D97706",
+    "darkred": "#9D174D",
+    "gray": "#64748B",
 }
 
 legend_items = "".join(
-    f'<div class="legend-item">'
-    f'<div class="legend-dot" style="background:{COLOR_MAP.get(v["color"], "#888")};"></div>'
-    f'{v["label"]}</div>'
-    for v in HAZARD_CONFIG.values()
+    f'<div class="legend-item"><div class="legend-dot" style="background:{COLOR_MAP.get(c["color"], "#888")};"></div>{c["label"]}</div>'
+    for c in HAZARD_CONFIG.values()
+)
+st.markdown(
+    f'<div class="legend-grid">{legend_items}</div>',
+    unsafe_allow_html=True,
 )
 
-# ── Sidebar: Report + Confirm ──────────────────────────────────────────────
+# ── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-
-    # Legend
-    st.markdown('<div class="sidebar-title">Hazard Legend</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="legend-grid">{legend_items}</div>', unsafe_allow_html=True)
-
-    # Report section
-    st.markdown('<div class="sidebar-title">Report a Hazard</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="sidebar-section">Click the map to set location</div>',
-        unsafe_allow_html=True,
-    )
-    
+    st.markdown('<div class="sidebar-title">🛡️ Report a Hazard</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="sidebar-section">Click the map to set location</div>',
         unsafe_allow_html=True,
@@ -497,7 +498,7 @@ with st.sidebar:
             format_func=lambda x: HAZARD_CONFIG[x]["label"],
         )
         description = st.text_area("Description", placeholder="Describe the hazard...", max_chars=500)
-        reported_by = "Shruthika"
+        reported_by = st.text_input("Your Name", placeholder="Enter your name")
         image = st.file_uploader("Photo (optional)", type=["jpg", "jpeg", "png"])
 
         col1, col2 = st.columns([1, 1])
@@ -530,17 +531,16 @@ with st.sidebar:
                 )
                 if success:
                     st.success(msg)
-                    st.cache_data.clear()
                     st.rerun()
                 else:
                     st.error(msg)
 
-    # ── Confirm existing hazards ────────────────────────────────────────────
-    st.markdown('<div class="sidebar-title" style="margin-top:1.5rem;">Confirm Hazards</div>', unsafe_allow_html=True)
+    # ── Confirm hazards ──────────────────────────────────────────────────────
+    st.markdown('<div class="sidebar-title" style="margin-top:1.5rem;">✅ Confirm Hazards</div>', unsafe_allow_html=True)
 
     if hazards:
         for h in hazards[:10]:
-            h_type = h.get("type", "unknown").strip().lower()
+            h_type = h.get("type", "unknown")
             cfg = HAZARD_CONFIG.get(h_type, {"label": h_type})
             desc_short = (h.get("description", "")[:50] + "...") if len(h.get("description", "")) > 50 else h.get("description", "")
             conf = h.get("confirmed_count", 0)
@@ -554,7 +554,6 @@ with st.sidebar:
                     ok, result = confirm_hazard(h["id"])
                     if ok:
                         st.success(f"Confirmed! Count: {result.get('confirmed_count', conf + 1)}")
-                        st.cache_data.clear()
                         st.rerun()
                     else:
                         st.error(result)
@@ -562,8 +561,8 @@ with st.sidebar:
     else:
         st.caption("No hazards reported yet. Be the first!")
 
-    # ── Safety score lookup ─────────────────────────────────────────────────
-    st.markdown('<div class="sidebar-title" style="margin-top:1.5rem;">Safety Score Lookup</div>', unsafe_allow_html=True)
+    # ── Safety score lookup ──────────────────────────────────────────────────
+    st.markdown('<div class="sidebar-title" style="margin-top:1.5rem;">🌟 Safety Score Lookup</div>', unsafe_allow_html=True)
 
     with st.form("score_form"):
         score_lat = st.number_input("Latitude", value=CHENNAI_CENTER[0], format="%.6f", key="score_lat")
@@ -573,8 +572,13 @@ with st.sidebar:
         if st.form_submit_button("Check Safety", use_container_width=True):
             result = fetch_safety_score(score_lat, score_lon, radius=score_radius / 100)
             if result:
-                st.metric("Safety Score", f"{result['safety_score']}/100")
-                st.info(result["safety_label"])
+                score = result['safety_score']
+                if score >= 80:
+                    st.success(f"🟢 Safety Score: {score}/100 — Safe")
+                elif score >= 60:
+                    st.warning(f"🟡 Safety Score: {score}/100 — Use Caution")
+                else:
+                    st.error(f"🔴 Safety Score: {score}/100 — High Risk")
                 st.caption(f"Nearby hazards: {result['nearby_hazards_count']}")
             else:
                 st.error("Could not fetch safety score. Is the backend running?")
