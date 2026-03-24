@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()
 from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety, calculate_wheelchair_route
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,9 +19,8 @@ load_dotenv()
 
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # Allowed hazard types
 ALLOWED_TYPES = ["manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"]
 

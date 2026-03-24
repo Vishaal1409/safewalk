@@ -1,19 +1,18 @@
+from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from passlib.context import CryptContext
 from jose import jwt
 import os
-from dotenv import load_dotenv
 from supabase import create_client
 
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")  # ← fixed
 JWT_SECRET = os.getenv("JWT_SECRET")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 router = APIRouter()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12, bcrypt__ident="2b")
 
