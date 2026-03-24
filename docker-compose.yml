@@ -12,24 +12,25 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
+    env_file:
+      - ./.env
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
 
   # ----------------------------------------
-  # Frontend Service (Streamlit)
+  # Frontend Service (Nginx — static HTML)
   # ----------------------------------------
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "8501:8501"
-    volumes:
-      - ./frontend:/app
-    restart: unless-stopped
+      - "80:80"
     depends_on:
       - backend
+    restart: unless-stopped
+
   # ----------------------------------------
   # Optional: Database (e.g., PostgreSQL)
   # Uncomment if local DB is needed instead of Supabase
