@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from passlib.context import CryptContext
 from jose import jwt
 import os
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client
 
@@ -19,13 +20,21 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds
 
 # Models
 class RegisterRequest(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator("username")
+    @classmethod
+    def username_alphanumeric(cls, v: str) -> str:
+        v = v.strip()
+        if not v.replace("_", "").replace("-", "").isalnum():
+            raise ValueError("Username may only contain letters, numbers, hyphens, and underscores")
+        return v
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., max_length=128)
 
 # 1. Register
 @router.post("/register")
@@ -77,7 +86,11 @@ def login(data: LoginRequest):
 
         # Generate JWT token
         token = jwt.encode(
-            {"user_id": user["id"], "username": user["username"]},
+            {
+                "user_id": user["id"],
+                "username": user["username"],
+                "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+            },
             JWT_SECRET,
             algorithm="HS256"
         )
