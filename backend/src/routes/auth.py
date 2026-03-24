@@ -56,11 +56,25 @@ def register(data: RegisterRequest):
             "password_hash": hashed_password
         }).execute()
 
+        new_user = response.data[0]
+
+        # Generate JWT token
+        token = jwt.encode(
+            {
+                "user_id": new_user["id"],
+                "username": new_user["username"],
+                "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+            },
+            JWT_SECRET,
+            algorithm="HS256"
+        )
+
         return {
             "message": "Registration successful!",
+            "token": token,
             "user": {
-                "username": data.username,
-                "email": data.email
+                "username": new_user["username"],
+                "email": new_user["email"]
             }
         }
     except HTTPException:
