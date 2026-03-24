@@ -118,3 +118,42 @@
 
 **Any blockers?**
 - None. The backend is secure, stable, decoupled, and containerized successfully.
+
+## Standup Notes - March 23, 2026
+
+**What did we accomplish today?**
+**Arun:**
+- **Frontend Migration**: Successfully migrated the fragile Streamlit frontend to a robust, static HTML/JS architecture (`index.html`).
+- **UI Redesign**: Implemented a complete frontend redesign featuring a modern Dark Theme, a Heatmap view, tabbed navigation, and a dynamic hazard grid.
+- **QA Automation**: Built out the `FINAL_QA_TEST` suite (`01_full_stress_test.sh`), creating automated, reusable curl tests to rigorously validate backend API contracts under stress.
+- **Regression Testing**: Executed the full post-migration QA sprint, proving the FastAPI backend handled the migration seamlessly with **zero regressions**.
+
+**What's next?**
+- Transition deployment infrastructure (Docker) from Streamlit to standard static HTML serving.
+- Address any subtle geometry or security edge-cases lingering in the backend code.
+
+**Any blockers?**
+- None. The migration was a complete success and the decoupling of frontend/backend is finished.
+
+## Standup Notes - March 24, 2026
+
+**What did we accomplish today?**
+**Arun:**
+- **Critical Bug Fixes**: Identified and resolved 4 major backend bugs during the post-migration QA phase:
+  1. **Hazard Sorting**: Fixed a contradiction in `/hazards` where negated sort keys with `reverse=False` caused unexpected ascending sorts. Now predictably sorts highest confirmed → newest first.
+  2. **JWT Expiration**: Added a 24-hour `exp` claim to JWT tokens in `auth.py` so tokens no longer live forever.
+  3. **Password CPU DoS**: Heavily clamped string lengths in `RegisterRequest` and `LoginRequest` (e.g., max 128 chars for passwords) to prevent bcrypt CPU starvation attacks, and added an alphanumeric validator for usernames.
+  4. **Route Geometry Fix**: Replaced the flawed triangle-inequality (ellipse) hazard detection with a true perpendicular point-to-segment corridor check in `route_engine.py`.
+- **Testing Validation**: Added `backend/test/test_route_engine.py` with 6 detailed test cases proving the geometry fix successfully rejects hazards far off the route axis that the old ellipse method mistakenly caught.
+- **Docker Re-Architecture**:
+  - Reorganized all Docker files into a dedicated `docker/` folder.
+  - Built a new `frontend.Dockerfile` and `nginx.conf` to serve the static HTML and reverse-proxy `/api/` traffic to the backend.
+  - Upgraded the backend image to `python:3.11.9-slim`.
+- **Documentation**: Updated `startup.md` to cleanly reflect the new architecture (removing all legacy Streamlit instructions).
+
+**What's next?**
+- Monitor error logs on the newly migrated HTML frontend to ensure stable API connections.
+- Final launch preparations.
+
+**Any blockers?**
+- None. The backend is secure, stable, decoupled, and containerized successfully.
