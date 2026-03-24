@@ -18,6 +18,32 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
     return R * c
 
 
+def point_to_segment_distance(
+    p_lat: float, p_lon: float,
+    a_lat: float, a_lon: float,
+    b_lat: float, b_lon: float
+) -> float:
+    """
+    Calculate the shortest distance (in km) from point P to the line segment A–B.
+    Uses a planar projection (adequate for short segments) then converts
+    the closest-point back through haversine for an accurate km value.
+    """
+    dx = b_lon - a_lon
+    dy = b_lat - a_lat
+    segment_len_sq = dx * dx + dy * dy
+
+    if segment_len_sq == 0:
+        # Degenerate segment: start == end
+        return haversine_distance(p_lat, p_lon, a_lat, a_lon)
+
+    t = ((p_lon - a_lon) * dx + (p_lat - a_lat) * dy) / segment_len_sq
+    t = max(0.0, min(1.0, t))  # clamp to segment [0, 1]
+
+    nearest_lat = a_lat + t * dy
+    nearest_lon = a_lon + t * dx
+    return haversine_distance(p_lat, p_lon, nearest_lat, nearest_lon)
+
+
 def get_hazards_along_route(
     start_lat: float, start_lon: float,
     end_lat: float, end_lon: float,
@@ -37,26 +63,13 @@ def get_hazards_along_route(
         if hazard_lat is None or hazard_lon is None:
             continue
 
-        # Check distance from start
-        dist_from_start = haversine_distance(
-            start_lat, start_lon,
-            hazard_lat, hazard_lon
-        )
-
-        # Check distance from end
-        dist_from_end = haversine_distance(
-            end_lat, end_lon,
-            hazard_lat, hazard_lon
-        )
-
-        # Total route distance
-        route_distance = haversine_distance(
+        dist = point_to_segment_distance(
+            hazard_lat, hazard_lon,
             start_lat, start_lon,
             end_lat, end_lon
         )
 
-        # If hazard is within proximity of the route path
-        if dist_from_start + dist_from_end <= route_distance + proximity_km:
+        if dist <= proximity_km:
             hazards_on_route.append(hazard)
 
     return hazards_on_route

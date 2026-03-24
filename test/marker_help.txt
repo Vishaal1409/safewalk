@@ -1,0 +1,200 @@
+Help on class MarkerCluster in module folium.plugins.marker_cluster:
+
+class MarkerCluster(folium.elements.JSCSSMixin, folium.map.Layer)
+ |  MarkerCluster(
+ |      locations=None,
+ |      popups=None,
+ |      icons=None,
+ |      name=None,
+ |      overlay=True,
+ |      control=True,
+ |      show=True,
+ |      icon_create_function=None,
+ |      options=None,
+ |      **kwargs
+ |  )
+ |
+ |  Provides Beautiful Animated Marker Clustering functionality for maps.
+ |
+ |  Parameters
+ |  ----------
+ |  locations: list of list or array of shape (n, 2).
+ |      Data points of the form [[lat, lng]].
+ |  popups: list of length n, default None
+ |      Popup for each marker, either a Popup object or a string or None.
+ |  icons: list of length n, default None
+ |      Icon for each marker, either an Icon object or a string or None.
+ |  name : string, default None
+ |      The name of the Layer, as it will appear in LayerControls
+ |  overlay : bool, default True
+ |      Adds the layer as an optional overlay (True) or the base layer (False).
+ |  control : bool, default True
+ |      Whether the Layer will be included in LayerControls.
+ |  show: bool, default True
+ |      Whether the layer will be shown on opening.
+ |  icon_create_function : string, default None
+ |      Override the default behaviour, making possible to customize
+ |      markers colors and sizes.
+ |  options : dict, default None
+ |      A dictionary with options for Leaflet.markercluster. See
+ |      https://github.com/Leaflet/Leaflet.markercluster for options.
+ |
+ |  Example
+ |  -------
+ |  >>> icon_create_function = '''
+ |  ...     function(cluster) {
+ |  ...     return L.divIcon({html: '<b>' + cluster.getChildCount() + '</b>',
+ |  ...                       className: 'marker-cluster marker-cluster-small',
+ |  ...                       iconSize: new L.Point(20, 20)});
+ |  ...     }
+ |  ... '''
+ |
+ |  Method resolution order:
+ |      MarkerCluster
+ |      folium.elements.JSCSSMixin
+ |      folium.map.Layer
+ |      folium.map.Evented
+ |      folium.map.Class
+ |      branca.element.MacroElement
+ |      branca.element.Element
+ |      builtins.object
+ |
+ |  Methods defined here:
+ |
+ |  __init__(
+ |      self,
+ |      locations=None,
+ |      popups=None,
+ |      icons=None,
+ |      name=None,
+ |      overlay=True,
+ |      control=True,
+ |      show=True,
+ |      icon_create_function=None,
+ |      options=None,
+ |      **kwargs
+ |  )
+ |      Initialize self.  See help(type(self)) for accurate signature.
+ |
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes defined here:
+ |
+ |  __annotations__ = {}
+ |
+ |  default_css = [('markerclustercss', 'https://cdnjs.cloudflare.com/ajax...
+ |
+ |  default_js = [('markerclusterjs', 'https://cdnjs.cloudflare.com/ajax/l...
+ |
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from folium.elements.JSCSSMixin:
+ |
+ |  add_css_link(self, name: str, url: str)
+ |      Add or update css resource link.
+ |
+ |  add_js_link(self, name: str, url: str)
+ |      Add or update JS resource link.
+ |
+ |  render(self, **kwargs)
+ |      Renders the HTML representation of the element.
+ |
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from folium.map.Evented:
+ |
+ |  on(self, **event_map: folium.utilities.JsCode)
+ |
+ |  once(self, **event_map: folium.utilities.JsCode)
+ |
+ |  ----------------------------------------------------------------------
+ |  Class methods inherited from folium.map.Class:
+ |
+ |  include(**kwargs)
+ |
+ |  ----------------------------------------------------------------------
+ |  Readonly properties inherited from folium.map.Class:
+ |
+ |  leaflet_class_name
+ |
+ |  ----------------------------------------------------------------------
+ |  Data and other attributes inherited from folium.map.Class:
+ |
+ |  includes = {}
+ |
+ |  ----------------------------------------------------------------------
+ |  Methods inherited from branca.element.Element:
+ |
+ |  __getstate__(self) -> dict
+ |      Modify object state when pickling the object.
+ |
+ |      jinja2 Templates cannot be pickled, so remove the instance attribute
+ |      if it exists. It will be added back when unpickling (see __setstate__).
+ |
+ |  __setstate__(self, state: dict)
+ |      Re-add _template instance attribute when unpickling
+ |
+ |  add_child(
+ |      self,
+ |      child: 'Element',
+ |      name: Optional[str] = None,
+ |      index: Optional[int] = None
+ |  ) -> 'Element'
+ |      Add a child.
+ |
+ |  add_children(
+ |      self,
+ |      child: 'Element',
+ |      name: Optional[str] = None,
+ |      index: Optional[int] = None
+ |  ) -> 'Element'
+ |      Add a child.
+ |
+ |  add_to(
+ |      self,
+ |      parent: 'Element',
+ |      name: Optional[str] = None,
+ |      index: Optional[int] = None
+ |  ) -> 'Element'
+ |      Add element to a parent.
+ |
+ |  get_bounds(self) -> List[List[Optional[float]]]
+ |      Computes the bounds of the object and all it's children
+ |      in the form [[lat_min, lon_min], [lat_max, lon_max]].
+ |
+ |  get_name(self) -> str
+ |      Returns a string representation of the object.
+ |      This string has to be unique and to be a python and
+ |      javascript-compatible
+ |      variable name.
+ |
+ |  get_root(self) -> 'Element'
+ |      Returns the root of the elements tree.
+ |
+ |  save(
+ |      self,
+ |      outfile: Union[str, bytes, pathlib._local.Path, BinaryIO],
+ |      close_file: bool = True,
+ |      **kwargs
+ |  )
+ |      Saves an Element into a file.
+ |
+ |      Parameters
+ |      ----------
+ |      outfile : str or file object
+ |          The file (or filename) where you want to output the html.
+ |      close_file : bool, default True
+ |          Whether the file has to be closed after write.
+ |
+ |  to_dict(self, depth: int = -1, ordered: bool = True, **kwargs) -> Union[dict, collections.OrderedDict]
+ |      Returns a dict representation of the object.
+ |
+ |  to_json(self, depth: int = -1, **kwargs) -> str
+ |      Returns a JSON representation of the object.
+ |
+ |  ----------------------------------------------------------------------
+ |  Data descriptors inherited from branca.element.Element:
+ |
+ |  __dict__
+ |      dictionary for instance variables
+ |
+ |  __weakref__
+ |      list of weak references to the object
+

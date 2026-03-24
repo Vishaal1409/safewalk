@@ -1,4 +1,2 @@
-streamlit>=1.30.0
-folium>=0.15.0
-streamlit-folium>=0.18.0
-requests>=2.31.0
+# Frontend is now static HTML served by nginx.
+# No Python dependencies required.

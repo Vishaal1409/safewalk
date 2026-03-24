@@ -76,13 +76,13 @@ def get_hazards(
             hazards = [h for h in hazards if h.get("confirmed_count", 0) >= min_confirmed]
         # Sort by confirmed count (highest first) then by created_at (newest first)
         hazards = sorted(
-           hazards,
-           key=lambda h: (
-               -(h.get("confirmed_count", 0)),
-               h.get("created_at", "")
-          ),
-          reverse=False
-)
+            hazards,
+            key=lambda h: (
+                h.get("confirmed_count", 0),
+                h.get("created_at", "")
+            ),
+            reverse=True
+        )
 
         # If no location filter → return everything
         if latitude is None or longitude is None:
