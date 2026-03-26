@@ -28,7 +28,7 @@
       --rose: #BE185D;
       --pink-light: #FCE7F3;
       --white: #fff;
-      --slate: #1E293B;
+      --slate: #0f172a;
       --glass: rgba(30, 41, 59, 0.72);
       --glass-border: rgba(190, 24, 93, 0.18);
       --radius: 16px;
@@ -44,7 +44,9 @@
       font-family: 'DM Sans', sans-serif;
       color: var(--slate);
       overflow: hidden;
-      background: #0f0a0c
+      background: #f8fafc;
+      -webkit-font-smoothing: subpixel-antialiased;
+      text-rendering: optimizeLegibility
     }
 
     ::-webkit-scrollbar {
@@ -210,7 +212,7 @@
     #map {
       position: fixed;
       inset: 0;
-      z-index: 1
+      z-index: 1;
     }
 
     .leaflet-popup-content-wrapper {
@@ -279,7 +281,7 @@
       top: 16px;
       left: 16px;
       bottom: 16px;
-      width: 380px;
+      width: 320px;
       z-index: 500;
       display: flex;
       flex-direction: column;
@@ -622,8 +624,10 @@
 
     .type-option.selected {
       border-color: var(--rose);
-      background: rgba(190, 24, 93, 0.12);
-      color: #fff
+      background: rgba(190, 24, 93, 0.18);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(190, 24, 93, 0.2), inset 0 0 0 1px rgba(190, 24, 93, 0.3);
+      transform: translateY(-2px)
     }
 
     .type-option .emoji {
@@ -751,14 +755,17 @@
       border-radius: var(--radius-sm);
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.06);
+      border-left: 3px solid var(--rose);
       margin-bottom: 10px;
-      transition: var(--transition)
+      transition: all .25s cubic-bezier(.4,0,.2,1)
     }
 
     .hazard-card:hover {
       border-color: var(--glass-border);
-      box-shadow: 0 0 20px rgba(190, 24, 93, 0.08);
-      transform: translateY(-1px)
+      border-left-color: var(--rose);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 4px 24px rgba(190, 24, 93, 0.12);
+      transform: translateY(-2px)
     }
 
     .hazard-card .card-top {
@@ -802,20 +809,34 @@
       font-size: .8rem;
       font-weight: 600;
       cursor: pointer;
-      transition: var(--transition);
-      font-family: 'DM Sans', sans-serif
+      transition: all .25s cubic-bezier(.4,0,.2,1);
+      font-family: 'DM Sans', sans-serif;
+      position: relative;
+      overflow: hidden
     }
 
     .confirm-btn:hover {
-      background: rgba(52, 211, 153, 0.15);
-      transform: translateY(-1px)
+      background: rgba(52, 211, 153, 0.18);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 12px rgba(52, 211, 153, 0.2)
+    }
+
+    .confirm-btn:active {
+      transform: scale(0.97)
+    }
+
+    .confirm-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none
     }
 
     .confirm-btn.confirmed {
-      background: #34d399;
+      background: linear-gradient(135deg, #059669, #34d399);
       color: #fff;
       border-color: #34d399;
-      pointer-events: none
+      pointer-events: none;
+      box-shadow: 0 2px 12px rgba(52, 211, 153, 0.3)
     }
 
     /* Safety tab */
@@ -1077,8 +1098,8 @@
     /* ===== Heatmap toggle pill ===== */
     #heatmap-btn {
       position: fixed;
-      top: 20px;
-      right: 220px;
+      top: 90px;
+      right: 20px;
       z-index: 500;
       padding: 10px 20px;
       border-radius: 50px;
@@ -1128,7 +1149,7 @@
     /* Time filter */
     #time-filter {
       position: fixed;
-      top: 76px;
+      top: 140px;
       right: 20px;
       z-index: 500;
       display: flex;
@@ -1280,6 +1301,310 @@
     .drawer-handle {
       display: none
     }
+
+    /* ===== OTHER TYPE INPUT ===== */
+    .other-input-wrap {
+      margin-top: 0;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .3s ease, opacity .3s ease, margin-top .3s ease
+    }
+
+    .other-input-wrap.show {
+      max-height: 60px;
+      opacity: 1;
+      margin-top: 10px
+    }
+
+    /* ===== PHOTO PREVIEW ===== */
+    .photo-preview {
+      margin-top: 8px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .3s ease;
+      position: relative
+    }
+
+    .photo-preview.has-image {
+      max-height: 140px
+    }
+
+    .photo-preview img {
+      width: 100%;
+      max-height: 130px;
+      object-fit: cover;
+      border-radius: var(--radius-sm)
+    }
+
+    .photo-preview .remove-photo {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      color: #fff;
+      font-size: .75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition)
+    }
+
+    .photo-preview .remove-photo:hover {
+      background: rgba(239,68,68,0.8)
+    }
+
+    /* ===== BTN SHINE ===== */
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform .6s ease
+    }
+
+    .btn-primary:hover::after {
+      transform: translateX(100%)
+    }
+
+    /* ===== DYNAMIC ISLAND DOCK (overrides sidebar) ===== */
+    #sidebar {
+      position: fixed !important;
+      left: 50% !important;
+      top: 18px !important;
+      transform: translateX(-50%) !important;
+      width: auto !important;
+      min-width: 340px !important;
+      max-width: min(720px, 92vw) !important;
+      height: auto !important;
+      max-height: calc(100vh - 36px) !important;
+      bottom: auto !important;
+      overflow: hidden !important;
+      border-radius: 28px !important;
+      background: rgba(255, 255, 255, 0.72) !important;
+      backdrop-filter: blur(28px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+      border: 1px solid rgba(190, 24, 93, 0.14) !important;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,0.06),
+        0 12px 40px rgba(109,16,54,0.13),
+        0 0 0 1px rgba(255,255,255,0.5) inset !important;
+      z-index: 9000 !important;
+      transition: all 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      padding: 0 !important;
+    }
+
+    #sidebar.collapsed {
+      min-width: 0 !important;
+      width: auto !important;
+      border-radius: 999px !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
+
+    #dock-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+      background: transparent;
+      border-bottom: 1px solid rgba(190,24,93,0.08);
+      transition: background 0.2s;
+    }
+    #dock-pill:hover { background: rgba(190,24,93,0.05); }
+
+    #dock-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      background: linear-gradient(90deg, #6D1036, #BE185D);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    #dock-stats-inline {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .dock-stat-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(190,24,93,0.10);
+      color: #BE185D;
+      letter-spacing: 0.02em;
+    }
+
+    #dock-chevron {
+      font-size: 12px;
+      color: #BE185D;
+      transition: transform 0.3s ease;
+    }
+    #sidebar.collapsed #dock-chevron { transform: rotate(180deg); }
+
+    #sidebar-content-wrap {
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: calc(100vh - 120px);
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity 0.3s ease;
+      opacity: 1;
+    }
+    #sidebar.collapsed #sidebar-content-wrap {
+      max-height: 0 !important;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ===== LIGHT THEME TEXT OVERRIDES ===== */
+    #sidebar .sidebar-header {
+      background: linear-gradient(135deg, #6D1036, #BE185D 70%, #f472b6) !important;
+    }
+    #sidebar .search-input-wrap input,
+    #sidebar .form-input {
+      color: #0f172a !important;
+      background: rgba(0,0,0,0.04) !important;
+      border-color: rgba(190,24,93,0.12) !important;
+    }
+    #sidebar .search-input-wrap input::placeholder,
+    #sidebar .form-input::placeholder {
+      color: rgba(15,23,42,0.4) !important;
+    }
+    #sidebar .search-icon { color: rgba(15,23,42,0.4) !important; }
+    #sidebar .tab-btn { color: rgba(15,23,42,0.5) !important; }
+    #sidebar .tab-btn.active { color: #0f172a !important; background: rgba(190,24,93,0.08) !important; }
+    #sidebar .tab-btn.active::after { background: var(--rose) !important; }
+    #sidebar .form-group label { color: rgba(15,23,42,0.6) !important; }
+    #sidebar .type-option { color: rgba(15,23,42,0.7) !important; border-color: rgba(15,23,42,0.1) !important; background: rgba(0,0,0,0.02) !important; }
+    #sidebar .type-option:hover { border-color: rgba(190,24,93,0.25) !important; }
+    #sidebar .type-option.selected { color: #BE185D !important; background: rgba(190,24,93,0.1) !important; border-color: var(--rose) !important; }
+    #sidebar .location-display { color: rgba(15,23,42,0.55) !important; background: rgba(190,24,93,0.04) !important; border-color: rgba(190,24,93,0.15) !important; }
+    #sidebar .location-display.filled { color: #059669 !important; background: rgba(52,211,153,0.06) !important; border-color: rgba(52,211,153,0.3) !important; }
+    #sidebar .upload-area { color: rgba(15,23,42,0.45) !important; border-color: rgba(190,24,93,0.15) !important; }
+    #sidebar .hazard-card { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.06) !important; }
+    #sidebar .hazard-card .card-desc { color: rgba(15,23,42,0.7) !important; }
+    #sidebar .hazard-card .card-meta { color: rgba(15,23,42,0.4) !important; }
+    #sidebar .score-number { color: #0f172a !important; }
+    #sidebar .score-sublabel { color: rgba(15,23,42,0.5) !important; }
+    #sidebar .score-label { color: #0f172a !important; }
+    #sidebar .search-result-item { color: #0f172a !important; }
+    #sidebar .search-results { background: rgba(255,255,255,0.95) !important; border-color: rgba(190,24,93,0.1) !important; }
+    #sidebar .search-result-item:hover { background: rgba(190,24,93,0.08) !important; }
+
+    /* ===== MESH GRADIENT AMBIENT GLOW ===== */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 20%, rgba(190,24,93,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(109,16,54,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(252,231,243,0.04) 0%, transparent 70%);
+    }
+
+    /* ===== STAT CARD OVERRIDES ===== */
+    .stat-card {
+      background: rgba(255,255,255,0.65) !important;
+      backdrop-filter: blur(16px) !important;
+      -webkit-backdrop-filter: blur(16px) !important;
+      border: 1px solid rgba(190,24,93,0.10) !important;
+      border-radius: 18px !important;
+      box-shadow:
+        0 1px 3px rgba(0,0,0,0.04),
+        0 4px 16px rgba(109,16,54,0.08),
+        0 0 0 1px rgba(255,255,255,0.6) inset !important;
+      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.22s ease !important;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px) scale(1.02) !important;
+      box-shadow:
+        0 8px 32px rgba(109,16,54,0.15),
+        0 0 0 1px rgba(255,255,255,0.7) inset !important;
+    }
+
+    /* ===== GLASS PANEL OVERRIDES ===== */
+    .glass-panel {
+      background: rgba(255,255,255,0.60) !important;
+      backdrop-filter: blur(20px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+      border: 1px solid rgba(190,24,93,0.10) !important;
+      color: #1E293B !important;
+    }
+
+    /* ===== LIGHT THEME FLOAT SCORE ===== */
+    #float-score {
+      background: rgba(255,255,255,0.78) !important;
+      border: 1px solid rgba(190,24,93,0.12) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+    }
+    #float-score .fs-label { color: #0f172a !important; }
+    #float-score .fs-sub { color: rgba(15,23,42,0.5) !important; }
+
+    /* ===== LIGHT THEME HEATMAP & TIME FILTER ===== */
+    #heatmap-btn {
+      background: rgba(255,255,255,0.78) !important;
+      color: #0f172a !important;
+      border: 1px solid rgba(190,24,93,0.12) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+    }
+    #heatmap-btn.active {
+      background: linear-gradient(135deg, #dc2626, #f97316) !important;
+      color: #fff !important;
+    }
+    #time-filter {
+      background: rgba(255,255,255,0.78) !important;
+      border: 1px solid rgba(190,24,93,0.12) !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+    }
+    .tf-pill { color: rgba(15,23,42,0.5) !important; }
+    .tf-pill:hover { color: #0f172a !important; }
+    .tf-pill.active { color: #fff !important; }
+
+    /* ===== LIGHT THEME TOAST ===== */
+    .toast {
+      background: rgba(255,255,255,0.92) !important;
+      color: #0f172a !important;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+    }
+
+    /* ===== LIGHT POPUP ===== */
+    .popup-inner h4 { color: #0f172a !important; }
+
+    @media(max-width:768px) {
+      #sidebar {
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        transform: none !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        border-radius: 28px 28px 0 0 !important;
+        max-height: 60vh !important;
+      }
+      #sidebar.collapsed {
+        border-radius: 28px 28px 0 0 !important;
+      }
+    }
   </style>
 </head>
 
@@ -1306,6 +1631,15 @@
 
   <!-- SIDEBAR -->
   <div id="sidebar">
+    <div id="dock-pill" onclick="toggleDock()">
+      <span id="dock-logo">🛡️ SafeWalk</span>
+      <div id="dock-stats-inline">
+        <span class="dock-stat-chip" id="dock-total">— hazards</span>
+        <span class="dock-stat-chip" id="dock-score">Chennai</span>
+      </div>
+      <span id="dock-chevron">▲</span>
+    </div>
+    <div id="sidebar-content-wrap">
     <div class="drawer-handle" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span></div>
     <div class="sidebar-header">
       <div class="sidebar-brand">
@@ -1333,7 +1667,10 @@
     <div class="tabs-content">
       <!-- REPORT TAB -->
       <div class="tab-panel active" id="tab-report">
-        <div class="form-group"><label>Hazard Type</label>
+
+        <!-- Hazard Type -->
+        <div class="form-group">
+          <label>Hazard Type</label>
           <div class="type-grid">
             <div class="type-option" data-type="manhole" data-color="#DC2626"><span class="emoji">🕳️</span>Manhole
             </div>
@@ -1347,25 +1684,55 @@
               Area</div>
             <div class="type-option" data-type="no_wheelchair_access" data-color="#64748B"><span
                 class="emoji">♿</span>No Access</div>
+            <div class="type-option" data-type="other" data-color="#BE185D"><span class="emoji">❓</span>Other</div>
+          </div>
+          <div class="other-input-wrap" id="other-input-wrap">
+            <input class="form-input" id="other-type-input" placeholder="Describe the hazard type...">
           </div>
         </div>
-        <div class="form-group"><label>Description</label><textarea class="form-input" id="report-desc"
-            placeholder="Describe the hazard..."></textarea></div>
-        <div class="form-group"><label>Detected Location</label>
-          <div class="location-display" id="loc-display"><span class="loc-icon">📍</span><span id="loc-text">Click on
-              the map to select location</span></div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" id="report-desc" placeholder="Describe the hazard..."></textarea>
         </div>
-        <div class="form-group"><label>Your Name</label><input class="form-input" id="report-name"
-            placeholder="Enter your name"></div>
-        <div class="form-group"><label>Photo (optional)</label>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label>Detected Location</label>
+          <div class="location-display" id="loc-display">
+            <span class="loc-icon">📍</span>
+            <span id="loc-text">Click on the map to select location</span>
+          </div>
+        </div>
+
+        <!-- Name -->
+        <div class="form-group">
+          <label>Your Name</label>
+          <input class="form-input" id="report-name" placeholder="Enter your name">
+        </div>
+
+        <!-- Photo -->
+        <div class="form-group">
+          <label>Photo (optional)</label>
           <label class="upload-area" for="report-photo">
-            <div class="icon">📷</div>Click to upload photo<input type="file" id="report-photo" accept="image/*"
-              style="display:none">
+            <div class="icon">📷</div>
+            Click to upload photo
+            <input type="file" id="report-photo" accept="image/*" style="display:none">
           </label>
           <div id="photo-name" style="color:rgba(255,255,255,0.5);font-size:.8rem;margin-top:4px"></div>
+          <div class="photo-preview" id="photo-preview">
+            <img id="photo-preview-img" alt="Preview">
+            <button type="button" class="remove-photo" id="remove-photo" title="Remove photo">✕</button>
+          </div>
         </div>
-        <button class="btn btn-primary" id="submit-report"><span class="btn-text">Submit Report</span><span
-            class="spinner"></span></button>
+
+        <!-- Submit -->
+        <button class="btn btn-primary" id="submit-report">
+          <span class="btn-text">Submit Report</span>
+          <span class="spinner"></span>
+        </button>
+
       </div>
       <!-- CONFIRM TAB -->
       <div class="tab-panel" id="tab-confirm">
@@ -1392,6 +1759,7 @@
         </div>
       </div>
     </div>
+    </div><!-- end sidebar-content-wrap -->
   </div>
 
   <!-- HEATMAP TOGGLE -->
@@ -1418,8 +1786,8 @@
   <div class="toast-container" id="toast-container"></div>
   <script>
     const API = 'http://127.0.0.1:8000';
-    const HAZARD_COLORS = { manhole: '#DC2626', flooding: '#2563EB', no_light: '#7C3AED', broken_footpath: '#D97706', unsafe_area: '#9D174D', no_wheelchair_access: '#64748B' };
-    const HAZARD_EMOJI = { manhole: '🕳️', flooding: '🌊', no_light: '🌑', broken_footpath: '🚧', unsafe_area: '⚠️', no_wheelchair_access: '♿' };
+    const HAZARD_COLORS = { manhole: '#DC2626', flooding: '#2563EB', no_light: '#7C3AED', broken_footpath: '#D97706', unsafe_area: '#9D174D', no_wheelchair_access: '#64748B', other: '#BE185D' };
+    const HAZARD_EMOJI = { manhole: '🕳️', flooding: '🌊', no_light: '🌑', broken_footpath: '🚧', unsafe_area: '⚠️', no_wheelchair_access: '♿', other: '❓' };
     let map, markers = [], clickMarker = null, clickCoords = null, allHazards = [], heatLayer = null, heatmapOn = false, activeTimeFilter = 'all';
 
     /* ===== LOADING SCREEN ===== */
@@ -1498,7 +1866,7 @@
 
     /* ===== LOAD HAZARDS ===== */
     async function loadHazards() {
-      try { const r = await fetch(API + '/hazards'); const d = await r.json(); allHazards = Array.isArray(d) ? d : (d.hazards || d.data || []); renderMarkers(); updateStats() }
+      try { const r = await fetch(API + '/hazards'); const d = await r.json(); allHazards = Array.isArray(d) ? d : (d.hazards || d.data || []); renderMarkers(); updateStats(); updateDockStats() }
       catch (e) { console.error('Load hazards error', e) }
     }
 
@@ -1525,16 +1893,28 @@
         const isNew = h.created_at && (Date.now() - new Date(h.created_at).getTime() < 3600000);
         heatData.push([h.latitude, h.longitude, 0.8]);
         if (!heatmapOn) {
-          const html = `<div style="width:18px;height:18px;background:${c};border:2.5px solid #fff;border-radius:50%;
-box-shadow:0 0 8px ${c}88;transition:transform .2s;cursor:pointer" class="${isNew ? 'marker-new' : ''}"
-onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform='scale(1)'"></div>`;
-          const icon = L.divIcon({ className: '', html, iconSize: [18, 18], iconAnchor: [9, 9] });
+          const html = `<div style="width:20px;height:20px;background:${c};border:2.5px solid #fff;border-radius:50%;box-shadow:0 0 10px ${c}66, 0 0 20px ${c}33;transition:all .25s cubic-bezier(.4,0,.2,1);cursor:pointer" class="${isNew ? 'marker-new' : ''}" onmouseover="this.style.transform='scale(1.6)';this.style.boxShadow='0 0 14px ${c}, 0 0 28px ${c}66'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 0 10px ${c}66, 0 0 20px ${c}33'"></div>`;
+          const icon = L.divIcon({ className: '', html, iconSize: [20, 20], iconAnchor: [10, 10] });
           const m = L.marker([h.latitude, h.longitude], { icon }).addTo(map);
           let popupHtml = `<div class="popup-inner"><span class="badge" style="background:${c}">${HAZARD_EMOJI[h.type] || ''} ${(h.type || '').replace(/_/g, ' ')}</span>
 <h4>${h.description || 'No description'}</h4><div class="meta"><span>👤 ${h.reported_by || 'Anon'}</span><span>✅ ${h.confirmed_count || 0}</span></div>`;
-          if (h.photo_url) popupHtml += `<img src="${API}${h.photo_url}" alt="hazard photo" onerror="this.style.display='none'">`;
+          if (h.photo_url) {
+            const imgSrc = h.photo_url.startsWith('http') ? h.photo_url : API + h.photo_url;
+            popupHtml += `<img src="${imgSrc}" alt="hazard photo" onerror="this.style.display='none'" />`;
+          }
+
           popupHtml += `</div>`;
-          m.bindPopup(popupHtml, { maxWidth: 280 }); markers.push(m);
+          m.bindPopup(popupHtml, { maxWidth: 280 });
+          m.on('click', function() {
+            const panels = document.querySelectorAll('.glass-panel, .stat-card, #floating-stats, #dock-pill');
+            panels.forEach((el, i) => {
+              el.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
+              el.style.transform = 'scale(0.97) translateY(4px)';
+              el.style.opacity = '0.7';
+              setTimeout(() => { el.style.transform = 'scale(1) translateY(0)'; el.style.opacity = '1'; }, 120 + i * 45);
+            });
+          });
+          markers.push(m);
         }
       });
       if (heatLayer) heatLayer.setLatLngs(heatData);
@@ -1543,10 +1923,20 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
     /* ===== REPORT ===== */
     function initReport() {
       document.querySelectorAll('.type-option').forEach(o => o.addEventListener('click', () => {
-        document.querySelectorAll('.type-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected')
+        document.querySelectorAll('.type-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected');
+        const otherWrap = document.getElementById('other-input-wrap');
+        if (o.dataset.type === 'other') { otherWrap.classList.add('show'); document.getElementById('other-type-input').focus() }
+        else { otherWrap.classList.remove('show') }
       }));
       document.getElementById('report-photo').addEventListener('change', e => {
-        const f = e.target.files[0]; document.getElementById('photo-name').textContent = f ? f.name : ''
+        const f = e.target.files[0]; document.getElementById('photo-name').textContent = f ? f.name : '';
+        const preview = document.getElementById('photo-preview'), previewImg = document.getElementById('photo-preview-img');
+        if (f) { const reader = new FileReader(); reader.onload = ev => { previewImg.src = ev.target.result; preview.classList.add('has-image') }; reader.readAsDataURL(f) }
+        else { preview.classList.remove('has-image'); previewImg.src = '' }
+      });
+      document.getElementById('remove-photo').addEventListener('click', () => {
+        document.getElementById('report-photo').value = ''; document.getElementById('photo-name').textContent = '';
+        document.getElementById('photo-preview').classList.remove('has-image'); document.getElementById('photo-preview-img').src = '';
       });
       document.getElementById('submit-report').addEventListener('click', submitReport);
     }
@@ -1560,7 +1950,10 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
       if (!name) return toast('Enter your name', 'error');
       const btn = document.getElementById('submit-report'); btn.classList.add('loading'); btn.disabled = true;
       const fd = new FormData();
-      fd.append('type', typeEl.dataset.type); fd.append('description', desc);
+      const hazardType = typeEl.dataset.type;
+      const otherText = document.getElementById('other-type-input').value.trim();
+      const finalDesc = hazardType === 'other' && otherText ? `[${otherText}] ${desc}` : desc;
+      fd.append('type', hazardType); fd.append('description', finalDesc);
       fd.append('latitude', clickCoords.lat); fd.append('longitude', clickCoords.lng); fd.append('reported_by', name);
       const photo = document.getElementById('report-photo').files[0];
       if (photo) fd.append('image', photo);
@@ -1571,6 +1964,8 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
         document.getElementById('report-desc').value = ''; document.getElementById('report-name').value = '';
         document.querySelectorAll('.type-option').forEach(x => x.classList.remove('selected'));
         document.getElementById('report-photo').value = ''; document.getElementById('photo-name').textContent = '';
+        document.getElementById('photo-preview').classList.remove('has-image'); document.getElementById('photo-preview-img').src = '';
+        document.getElementById('other-input-wrap').classList.remove('show'); document.getElementById('other-type-input').value = '';
         if (clickMarker) { map.removeLayer(clickMarker); clickMarker = null }
         document.getElementById('loc-display').classList.remove('filled');
         document.getElementById('loc-text').textContent = 'Click on the map to select location'; clickCoords = null;
@@ -1582,34 +1977,61 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
     /* ===== CONFIRM ===== */
     function renderConfirmList() {
       const list = document.getElementById('confirm-list');
-      if (!allHazards.length) { list.innerHTML = '<p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">No hazards yet</p>'; return }
+
+      if (!allHazards.length) {
+        list.innerHTML = '<p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">No hazards yet</p>';
+        return;
+      }
+
       list.innerHTML = allHazards.map(h => {
         const c = HAZARD_COLORS[h.type] || '#BE185D';
-        return `<div class="hazard-card"><div class="card-top"><span class="badge" style="background:${c}">${HAZARD_EMOJI[h.type] || ''} ${(h.type || '').replace(/_/g, ' ')}</span></div>
-<div class="card-desc">${h.description || '—'}</div>
-<div class="card-meta"><span>👤 ${h.reported_by || 'Anon'}</span><span>✅ ${h.confirmed_count || 0} confirms</span></div>
-<button class="confirm-btn" onclick="confirmHazard(${h.id},this)">👍 Confirm</button></div>`
+
+        return `
+      <div class="hazard-card">
+        <div class="card-top">
+          <span class="badge" style="background:${c}">
+            ${HAZARD_EMOJI[h.type] || ''} ${(h.type || '').replace(/_/g, ' ')}
+          </span>
+        </div>
+
+        <div class="card-desc">
+          ${h.description || '—'}
+        </div>
+
+        <div class="card-meta">
+          <span>👤 ${h.reported_by || 'Anon'}</span>
+          <span>✅ ${h.confirmed_count || 0} confirms</span>
+        </div>
+
+        <button class="confirm-btn" onclick="confirmHazard(${h.id}, this)">
+          👍 Confirm
+        </button>
+      </div>
+    `;
       }).join('');
     }
 
     async function confirmHazard(id, btn) {
-      const name = document.getElementById('report-name').value.trim() || 'Anonymous';
-
+      btn.disabled = true;
+      btn.textContent = '✓ Confirmed';
+      btn.classList.add('confirmed');
+      const countEl = btn.parentElement.querySelector('.card-meta span:last-child');
+      let origCount = 0;
+      if (countEl) {
+        origCount = parseInt(countEl.textContent.match(/\d+/)?.[0]) || 0;
+        countEl.textContent = `✅ ${origCount + 1} confirms`;
+      }
       try {
-        const r = await fetch(`${API}/hazards/${id}/confirm?confirmed_by=${encodeURIComponent(name)}`, {
-          method: 'POST'
-        });
-
+        const r = await fetch(`${API}/hazards/${id}/confirm`, { method: 'POST' });
         if (!r.ok) throw new Error();
-
-        btn.textContent = '✓ Confirmed';
-        btn.classList.add('confirmed');
-
-        toast('Hazard confirmed! 👍', 'success');
-        loadHazards();
-
+        toast('Hazard confirmed! ✅', 'success');
       } catch (e) {
-        toast('Failed to confirm', 'error');
+        console.error(e);
+        btn.disabled = false;
+        btn.textContent = '👍 Confirm';
+        btn.classList.remove('confirmed');
+        if (countEl) countEl.textContent = `✅ ${origCount} confirms`;
+        toast('Failed to confirm hazard', 'error');
       }
     }
 
@@ -1690,8 +2112,7 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
 
     async function fetchScoreAt(lat, lng) {
       try {
-        const r = await fetch(`${API}/safety-score?latitude=${lat}&longitude=${lng}&radius=0.01
-  `);
+        const r = await fetch(`${API}/safety-score?latitude=${lat}&longitude=${lng}&radius=0.01`);
         const d = await r.json();
         document.getElementById('fs-num').textContent = d.safety_score ?? '—';
         document.getElementById('fs-label').textContent = d.safety_label || 'Safety Score';
@@ -1752,6 +2173,18 @@ onmouseover="this.style.transform='scale(1.5)'" onmouseout="this.style.transform
         } else { lr.style.display = 'none' }
       } else { lr.style.display = 'none' }
       card.classList.add('show');
+    }
+
+    /* ===== DOCK TOGGLE ===== */
+    function toggleDock() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('collapsed');
+    }
+
+    function updateDockStats() {
+      const total = allHazards ? allHazards.length : 0;
+      const chip = document.getElementById('dock-total');
+      if (chip) chip.textContent = total + ' hazard' + (total !== 1 ? 's' : '');
     }
   </script>
 </body>
