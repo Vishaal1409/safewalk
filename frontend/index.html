@@ -63,6 +63,75 @@
     }
 
     /* ===== LOADING SCREEN ===== */
+    #intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      animation: fadeIn 1.2s ease;
+    }
+
+    .intro-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      color: white;
+    }
+
+    .intro-sub {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1rem;
+    }
+
+    .footstep-container {
+      display: flex;
+      gap: 12px;
+    }
+
+    .footstep {
+      font-size: 2rem;
+      opacity: 0;
+      animation: stepAnim 1.2s infinite;
+    }
+
+    .footstep:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .footstep:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    .footstep:nth-child(4) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes stepAnim {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0
+      }
+
+      to {
+        opacity: 1
+      }
+    }
+
     #loading-screen {
       position: fixed;
       inset: 0;
@@ -757,7 +826,7 @@
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-left: 3px solid var(--rose);
       margin-bottom: 10px;
-      transition: all .25s cubic-bezier(.4,0,.2,1)
+      transition: all .25s cubic-bezier(.4, 0, .2, 1)
     }
 
     .hazard-card:hover {
@@ -809,7 +878,7 @@
       font-size: .8rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all .25s cubic-bezier(.4,0,.2,1);
+      transition: all .25s cubic-bezier(.4, 0, .2, 1);
       font-family: 'DM Sans', sans-serif;
       position: relative;
       overflow: hidden
@@ -1345,7 +1414,7 @@
       width: 24px;
       height: 24px;
       border-radius: 50%;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.6);
       border: none;
       color: #fff;
       font-size: .75rem;
@@ -1357,7 +1426,7 @@
     }
 
     .photo-preview .remove-photo:hover {
-      background: rgba(239,68,68,0.8)
+      background: rgba(239, 68, 68, 0.8)
     }
 
     /* ===== BTN SHINE ===== */
@@ -1365,7 +1434,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%);
+      background: linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.12) 50%, transparent 70%);
       transform: translateX(-100%);
       transition: transform .6s ease
     }
@@ -1377,10 +1446,11 @@
     /* ===== DYNAMIC ISLAND DOCK (overrides sidebar) ===== */
     #sidebar {
       position: fixed !important;
-      left: 50% !important;
-      top: 18px !important;
-      transform: translateX(-50%) !important;
+      top: 20px !important;
       width: auto !important;
+      right: 20px !important;
+      left: auto !important;
+      transform: none !important;
       min-width: 340px !important;
       max-width: min(720px, 92vw) !important;
       height: auto !important;
@@ -1393,9 +1463,9 @@
       -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
       border: 1px solid rgba(190, 24, 93, 0.14) !important;
       box-shadow:
-        0 2px 8px rgba(0,0,0,0.06),
-        0 12px 40px rgba(109,16,54,0.13),
-        0 0 0 1px rgba(255,255,255,0.5) inset !important;
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        0 12px 40px rgba(109, 16, 54, 0.13),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset !important;
       z-index: 9000 !important;
       transition: all 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       display: flex !important;
@@ -1420,10 +1490,13 @@
       user-select: none;
       flex-shrink: 0;
       background: transparent;
-      border-bottom: 1px solid rgba(190,24,93,0.08);
+      border-bottom: 1px solid rgba(190, 24, 93, 0.08);
       transition: background 0.2s;
     }
-    #dock-pill:hover { background: rgba(190,24,93,0.05); }
+
+    #dock-pill:hover {
+      background: rgba(190, 24, 93, 0.05);
+    }
 
     #dock-logo {
       font-family: 'Syne', sans-serif;
@@ -1446,7 +1519,7 @@
       font-weight: 600;
       padding: 3px 10px;
       border-radius: 999px;
-      background: rgba(190,24,93,0.10);
+      background: rgba(190, 24, 93, 0.10);
       color: #BE185D;
       letter-spacing: 0.02em;
     }
@@ -1456,16 +1529,20 @@
       color: #BE185D;
       transition: transform 0.3s ease;
     }
-    #sidebar.collapsed #dock-chevron { transform: rotate(180deg); }
+
+    #sidebar.collapsed #dock-chevron {
+      transform: rotate(180deg);
+    }
 
     #sidebar-content-wrap {
       overflow-y: auto;
       overflow-x: hidden;
       max-height: calc(100vh - 120px);
       transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity 0.3s ease;
+        opacity 0.3s ease;
       opacity: 1;
     }
+
     #sidebar.collapsed #sidebar-content-wrap {
       max-height: 0 !important;
       opacity: 0;
@@ -1476,36 +1553,110 @@
     #sidebar .sidebar-header {
       background: linear-gradient(135deg, #6D1036, #BE185D 70%, #f472b6) !important;
     }
+
     #sidebar .search-input-wrap input,
     #sidebar .form-input {
       color: #0f172a !important;
-      background: rgba(0,0,0,0.04) !important;
-      border-color: rgba(190,24,93,0.12) !important;
+      background: rgba(0, 0, 0, 0.04) !important;
+      border-color: rgba(190, 24, 93, 0.12) !important;
     }
+
     #sidebar .search-input-wrap input::placeholder,
     #sidebar .form-input::placeholder {
-      color: rgba(15,23,42,0.4) !important;
+      color: rgba(15, 23, 42, 0.4) !important;
     }
-    #sidebar .search-icon { color: rgba(15,23,42,0.4) !important; }
-    #sidebar .tab-btn { color: rgba(15,23,42,0.5) !important; }
-    #sidebar .tab-btn.active { color: #0f172a !important; background: rgba(190,24,93,0.08) !important; }
-    #sidebar .tab-btn.active::after { background: var(--rose) !important; }
-    #sidebar .form-group label { color: rgba(15,23,42,0.6) !important; }
-    #sidebar .type-option { color: rgba(15,23,42,0.7) !important; border-color: rgba(15,23,42,0.1) !important; background: rgba(0,0,0,0.02) !important; }
-    #sidebar .type-option:hover { border-color: rgba(190,24,93,0.25) !important; }
-    #sidebar .type-option.selected { color: #BE185D !important; background: rgba(190,24,93,0.1) !important; border-color: var(--rose) !important; }
-    #sidebar .location-display { color: rgba(15,23,42,0.55) !important; background: rgba(190,24,93,0.04) !important; border-color: rgba(190,24,93,0.15) !important; }
-    #sidebar .location-display.filled { color: #059669 !important; background: rgba(52,211,153,0.06) !important; border-color: rgba(52,211,153,0.3) !important; }
-    #sidebar .upload-area { color: rgba(15,23,42,0.45) !important; border-color: rgba(190,24,93,0.15) !important; }
-    #sidebar .hazard-card { background: rgba(0,0,0,0.03) !important; border-color: rgba(0,0,0,0.06) !important; }
-    #sidebar .hazard-card .card-desc { color: rgba(15,23,42,0.7) !important; }
-    #sidebar .hazard-card .card-meta { color: rgba(15,23,42,0.4) !important; }
-    #sidebar .score-number { color: #0f172a !important; }
-    #sidebar .score-sublabel { color: rgba(15,23,42,0.5) !important; }
-    #sidebar .score-label { color: #0f172a !important; }
-    #sidebar .search-result-item { color: #0f172a !important; }
-    #sidebar .search-results { background: rgba(255,255,255,0.95) !important; border-color: rgba(190,24,93,0.1) !important; }
-    #sidebar .search-result-item:hover { background: rgba(190,24,93,0.08) !important; }
+
+    #sidebar .search-icon {
+      color: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    #sidebar .tab-btn {
+      color: rgba(15, 23, 42, 0.5) !important;
+    }
+
+    #sidebar .tab-btn.active {
+      color: #0f172a !important;
+      background: rgba(190, 24, 93, 0.08) !important;
+    }
+
+    #sidebar .tab-btn.active::after {
+      background: var(--rose) !important;
+    }
+
+    #sidebar .form-group label {
+      color: rgba(15, 23, 42, 0.6) !important;
+    }
+
+    #sidebar .type-option {
+      color: rgba(15, 23, 42, 0.7) !important;
+      border-color: rgba(15, 23, 42, 0.1) !important;
+      background: rgba(0, 0, 0, 0.02) !important;
+    }
+
+    #sidebar .type-option:hover {
+      border-color: rgba(190, 24, 93, 0.25) !important;
+    }
+
+    #sidebar .type-option.selected {
+      color: #BE185D !important;
+      background: rgba(190, 24, 93, 0.1) !important;
+      border-color: var(--rose) !important;
+    }
+
+    #sidebar .location-display {
+      color: rgba(15, 23, 42, 0.55) !important;
+      background: rgba(190, 24, 93, 0.04) !important;
+      border-color: rgba(190, 24, 93, 0.15) !important;
+    }
+
+    #sidebar .location-display.filled {
+      color: #059669 !important;
+      background: rgba(52, 211, 153, 0.06) !important;
+      border-color: rgba(52, 211, 153, 0.3) !important;
+    }
+
+    #sidebar .upload-area {
+      color: rgba(15, 23, 42, 0.45) !important;
+      border-color: rgba(190, 24, 93, 0.15) !important;
+    }
+
+    #sidebar .hazard-card {
+      background: rgba(0, 0, 0, 0.03) !important;
+      border-color: rgba(0, 0, 0, 0.06) !important;
+    }
+
+    #sidebar .hazard-card .card-desc {
+      color: rgba(15, 23, 42, 0.7) !important;
+    }
+
+    #sidebar .hazard-card .card-meta {
+      color: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    #sidebar .score-number {
+      color: #0f172a !important;
+    }
+
+    #sidebar .score-sublabel {
+      color: rgba(15, 23, 42, 0.5) !important;
+    }
+
+    #sidebar .score-label {
+      color: #0f172a !important;
+    }
+
+    #sidebar .search-result-item {
+      color: #0f172a !important;
+    }
+
+    #sidebar .search-results {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border-color: rgba(190, 24, 93, 0.1) !important;
+    }
+
+    #sidebar .search-result-item:hover {
+      background: rgba(190, 24, 93, 0.08) !important;
+    }
 
     /* ===== MESH GRADIENT AMBIENT GLOW ===== */
     body::before {
@@ -1515,79 +1666,99 @@
       z-index: 0;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 60% 40% at 15% 20%, rgba(190,24,93,0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(109,16,54,0.06) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(252,231,243,0.04) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 40% at 15% 20%, rgba(190, 24, 93, 0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 85% 80%, rgba(109, 16, 54, 0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 50% 50%, rgba(252, 231, 243, 0.04) 0%, transparent 70%);
     }
 
     /* ===== STAT CARD OVERRIDES ===== */
     .stat-card {
-      background: rgba(255,255,255,0.65) !important;
+      background: rgba(255, 255, 255, 0.65) !important;
       backdrop-filter: blur(16px) !important;
       -webkit-backdrop-filter: blur(16px) !important;
-      border: 1px solid rgba(190,24,93,0.10) !important;
+      border: 1px solid rgba(190, 24, 93, 0.10) !important;
       border-radius: 18px !important;
       box-shadow:
-        0 1px 3px rgba(0,0,0,0.04),
-        0 4px 16px rgba(109,16,54,0.08),
-        0 0 0 1px rgba(255,255,255,0.6) inset !important;
-      transition: transform 0.22s cubic-bezier(0.34,1.56,0.64,1),
-                  box-shadow 0.22s ease !important;
+        0 1px 3px rgba(0, 0, 0, 0.04),
+        0 4px 16px rgba(109, 16, 54, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.22s ease !important;
     }
+
     .stat-card:hover {
       transform: translateY(-3px) scale(1.02) !important;
       box-shadow:
-        0 8px 32px rgba(109,16,54,0.15),
-        0 0 0 1px rgba(255,255,255,0.7) inset !important;
+        0 8px 32px rgba(109, 16, 54, 0.15),
+        0 0 0 1px rgba(255, 255, 255, 0.7) inset !important;
     }
 
     /* ===== GLASS PANEL OVERRIDES ===== */
     .glass-panel {
-      background: rgba(255,255,255,0.60) !important;
+      background: rgba(255, 255, 255, 0.60) !important;
       backdrop-filter: blur(20px) saturate(160%) !important;
       -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
-      border: 1px solid rgba(190,24,93,0.10) !important;
+      border: 1px solid rgba(190, 24, 93, 0.10) !important;
       color: #1E293B !important;
     }
 
     /* ===== LIGHT THEME FLOAT SCORE ===== */
     #float-score {
-      background: rgba(255,255,255,0.78) !important;
-      border: 1px solid rgba(190,24,93,0.12) !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+      background: rgba(255, 255, 255, 0.78) !important;
+      border: 1px solid rgba(190, 24, 93, 0.12) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 32px rgba(109, 16, 54, 0.1) !important;
     }
-    #float-score .fs-label { color: #0f172a !important; }
-    #float-score .fs-sub { color: rgba(15,23,42,0.5) !important; }
+
+    #float-score .fs-label {
+      color: #0f172a !important;
+    }
+
+    #float-score .fs-sub {
+      color: rgba(15, 23, 42, 0.5) !important;
+    }
 
     /* ===== LIGHT THEME HEATMAP & TIME FILTER ===== */
     #heatmap-btn {
-      background: rgba(255,255,255,0.78) !important;
+      background: rgba(255, 255, 255, 0.78) !important;
       color: #0f172a !important;
-      border: 1px solid rgba(190,24,93,0.12) !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+      border: 1px solid rgba(190, 24, 93, 0.12) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 32px rgba(109, 16, 54, 0.1) !important;
     }
+
     #heatmap-btn.active {
       background: linear-gradient(135deg, #dc2626, #f97316) !important;
       color: #fff !important;
     }
+
     #time-filter {
-      background: rgba(255,255,255,0.78) !important;
-      border: 1px solid rgba(190,24,93,0.12) !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 32px rgba(109,16,54,0.1) !important;
+      background: rgba(255, 255, 255, 0.78) !important;
+      border: 1px solid rgba(190, 24, 93, 0.12) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 8px 32px rgba(109, 16, 54, 0.1) !important;
     }
-    .tf-pill { color: rgba(15,23,42,0.5) !important; }
-    .tf-pill:hover { color: #0f172a !important; }
-    .tf-pill.active { color: #fff !important; }
+
+    .tf-pill {
+      color: rgba(15, 23, 42, 0.5) !important;
+    }
+
+    .tf-pill:hover {
+      color: #0f172a !important;
+    }
+
+    .tf-pill.active {
+      color: #fff !important;
+    }
 
     /* ===== LIGHT THEME TOAST ===== */
     .toast {
-      background: rgba(255,255,255,0.92) !important;
+      background: rgba(255, 255, 255, 0.92) !important;
       color: #0f172a !important;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
     }
 
     /* ===== LIGHT POPUP ===== */
-    .popup-inner h4 { color: #0f172a !important; }
+    .popup-inner h4 {
+      color: #0f172a !important;
+    }
 
     @media(max-width:768px) {
       #sidebar {
@@ -1601,6 +1772,7 @@
         border-radius: 28px 28px 0 0 !important;
         max-height: 60vh !important;
       }
+
       #sidebar.collapsed {
         border-radius: 28px 28px 0 0 !important;
       }
@@ -1611,11 +1783,16 @@
 <body>
   <!-- LOADING SCREEN -->
   <div id="loading-screen">
-    <div class="particle-canvas" id="particles"></div>
-    <div class="loading-logo">SafeWalk</div>
-    <div class="tagline"><span id="typewriter"></span><span class="cursor"></span></div>
-    <div class="progress-wrap">
-      <div class="progress-bar" id="progress-bar"></div>
+    <div id="intro">
+      <div class="footstep-container">
+        <div class="footstep">👣</div>
+        <div class="footstep">👣</div>
+        <div class="footstep">👣</div>
+        <div class="footstep">👣</div>
+      </div>
+
+      <h1 class="intro-title">SafeWalk</h1>
+      <p class="intro-sub">Making Chennai Safer, One Step At A Time</p>
     </div>
   </div>
 
@@ -1640,125 +1817,127 @@
       <span id="dock-chevron">▲</span>
     </div>
     <div id="sidebar-content-wrap">
-    <div class="drawer-handle" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span></div>
-    <div class="sidebar-header">
-      <div class="sidebar-brand">
-        <div class="logo-icon">🚶</div>
-        <h1>SafeWalk</h1>
-        <div class="live-badge"><span class="live-dot"></span><span id="live-count">0</span> hazards</div>
+      <div class="drawer-handle" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span>
       </div>
-      <div class="header-stats">
-        <div class="stat-pill"><span class="num" id="stat-total">0</span><span class="label">Total</span></div>
-        <div class="stat-pill"><span class="num" id="stat-confirmed">0</span><span class="label">Confirmed</span></div>
+      <div class="sidebar-header">
+        <div class="sidebar-brand">
+          <div class="logo-icon">🚶</div>
+          <h1>SafeWalk</h1>
+          <div class="live-badge"><span class="live-dot"></span><span id="live-count">0</span> hazards</div>
+        </div>
+        <div class="header-stats">
+          <div class="stat-pill"><span class="num" id="stat-total">0</span><span class="label">Total</span></div>
+          <div class="stat-pill"><span class="num" id="stat-confirmed">0</span><span class="label">Confirmed</span>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="search-box">
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" placeholder="Search Chennai area..." autocomplete="off">
-        <div class="search-results" id="search-results"></div>
+      <div class="search-box">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search Chennai area..." autocomplete="off">
+          <div class="search-results" id="search-results"></div>
+        </div>
       </div>
-    </div>
-    <div class="tabs-bar">
-      <button class="tab-btn active" data-tab="report">📝 Report</button>
-      <button class="tab-btn" data-tab="confirm">✅ Confirm</button>
-      <button class="tab-btn" data-tab="safety">🛡 Safety</button>
-    </div>
-    <div class="tabs-content">
-      <!-- REPORT TAB -->
-      <div class="tab-panel active" id="tab-report">
+      <div class="tabs-bar">
+        <button class="tab-btn active" data-tab="report">📝 Report</button>
+        <button class="tab-btn" data-tab="confirm">✅ Confirm</button>
+        <button class="tab-btn" data-tab="safety">🛡 Safety</button>
+      </div>
+      <div class="tabs-content">
+        <!-- REPORT TAB -->
+        <div class="tab-panel active" id="tab-report">
 
-        <!-- Hazard Type -->
-        <div class="form-group">
-          <label>Hazard Type</label>
-          <div class="type-grid">
-            <div class="type-option" data-type="manhole" data-color="#DC2626"><span class="emoji">🕳️</span>Manhole
+          <!-- Hazard Type -->
+          <div class="form-group">
+            <label>Hazard Type</label>
+            <div class="type-grid">
+              <div class="type-option" data-type="manhole" data-color="#DC2626"><span class="emoji">🕳️</span>Manhole
+              </div>
+              <div class="type-option" data-type="flooding" data-color="#2563EB"><span class="emoji">🌊</span>Flooding
+              </div>
+              <div class="type-option" data-type="no_light" data-color="#7C3AED"><span class="emoji">🌑</span>No Light
+              </div>
+              <div class="type-option" data-type="broken_footpath" data-color="#D97706"><span
+                  class="emoji">🚧</span>Broken Path</div>
+              <div class="type-option" data-type="unsafe_area" data-color="#9D174D"><span class="emoji">⚠️</span>Unsafe
+                Area</div>
+              <div class="type-option" data-type="no_wheelchair_access" data-color="#64748B"><span
+                  class="emoji">♿</span>No Access</div>
+              <div class="type-option" data-type="other" data-color="#BE185D"><span class="emoji">❓</span>Other</div>
             </div>
-            <div class="type-option" data-type="flooding" data-color="#2563EB"><span class="emoji">🌊</span>Flooding
+            <div class="other-input-wrap" id="other-input-wrap">
+              <input class="form-input" id="other-type-input" placeholder="Describe the hazard type...">
             </div>
-            <div class="type-option" data-type="no_light" data-color="#7C3AED"><span class="emoji">🌑</span>No Light
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-input" id="report-desc" placeholder="Describe the hazard..."></textarea>
+          </div>
+
+          <!-- Location -->
+          <div class="form-group">
+            <label>Detected Location</label>
+            <div class="location-display" id="loc-display">
+              <span class="loc-icon">📍</span>
+              <span id="loc-text">Click on the map to select location</span>
             </div>
-            <div class="type-option" data-type="broken_footpath" data-color="#D97706"><span
-                class="emoji">🚧</span>Broken Path</div>
-            <div class="type-option" data-type="unsafe_area" data-color="#9D174D"><span class="emoji">⚠️</span>Unsafe
-              Area</div>
-            <div class="type-option" data-type="no_wheelchair_access" data-color="#64748B"><span
-                class="emoji">♿</span>No Access</div>
-            <div class="type-option" data-type="other" data-color="#BE185D"><span class="emoji">❓</span>Other</div>
           </div>
-          <div class="other-input-wrap" id="other-input-wrap">
-            <input class="form-input" id="other-type-input" placeholder="Describe the hazard type...">
+
+          <!-- Name -->
+          <div class="form-group">
+            <label>Your Name</label>
+            <input class="form-input" id="report-name" placeholder="Enter your name">
           </div>
-        </div>
 
-        <!-- Description -->
-        <div class="form-group">
-          <label>Description</label>
-          <textarea class="form-input" id="report-desc" placeholder="Describe the hazard..."></textarea>
-        </div>
-
-        <!-- Location -->
-        <div class="form-group">
-          <label>Detected Location</label>
-          <div class="location-display" id="loc-display">
-            <span class="loc-icon">📍</span>
-            <span id="loc-text">Click on the map to select location</span>
+          <!-- Photo -->
+          <div class="form-group">
+            <label>Photo (optional)</label>
+            <label class="upload-area" for="report-photo">
+              <div class="icon">📷</div>
+              Click to upload photo
+              <input type="file" id="report-photo" accept="image/*" style="display:none">
+            </label>
+            <div id="photo-name" style="color:rgba(255,255,255,0.5);font-size:.8rem;margin-top:4px"></div>
+            <div class="photo-preview" id="photo-preview">
+              <img id="photo-preview-img" alt="Preview">
+              <button type="button" class="remove-photo" id="remove-photo" title="Remove photo">✕</button>
+            </div>
           </div>
-        </div>
 
-        <!-- Name -->
-        <div class="form-group">
-          <label>Your Name</label>
-          <input class="form-input" id="report-name" placeholder="Enter your name">
-        </div>
+          <!-- Submit -->
+          <button class="btn btn-primary" id="submit-report">
+            <span class="btn-text">Submit Report</span>
+            <span class="spinner"></span>
+          </button>
 
-        <!-- Photo -->
-        <div class="form-group">
-          <label>Photo (optional)</label>
-          <label class="upload-area" for="report-photo">
-            <div class="icon">📷</div>
-            Click to upload photo
-            <input type="file" id="report-photo" accept="image/*" style="display:none">
-          </label>
-          <div id="photo-name" style="color:rgba(255,255,255,0.5);font-size:.8rem;margin-top:4px"></div>
-          <div class="photo-preview" id="photo-preview">
-            <img id="photo-preview-img" alt="Preview">
-            <button type="button" class="remove-photo" id="remove-photo" title="Remove photo">✕</button>
+        </div>
+        <!-- CONFIRM TAB -->
+        <div class="tab-panel" id="tab-confirm">
+          <div id="confirm-list">
+            <p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">Loading hazards...</p>
           </div>
         </div>
-
-        <!-- Submit -->
-        <button class="btn btn-primary" id="submit-report">
-          <span class="btn-text">Submit Report</span>
-          <span class="spinner"></span>
-        </button>
-
-      </div>
-      <!-- CONFIRM TAB -->
-      <div class="tab-panel" id="tab-confirm">
-        <div id="confirm-list">
-          <p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">Loading hazards...</p>
+        <!-- SAFETY TAB -->
+        <div class="tab-panel" id="tab-safety">
+          <div class="safety-search form-group"><label>Search Area</label><input class="form-input" id="safety-area"
+              placeholder="Type an area name...">
+            <div class="search-results" id="safety-results"></div>
+          </div>
+          <div class="score-display" id="score-display" style="display:none">
+            <div class="score-ring"><svg viewBox="0 0 160 160">
+                <circle class="bg" cx="80" cy="80" r="70" />
+                <circle class="fg" id="score-fg" cx="80" cy="80" r="70" stroke-dasharray="439.82"
+                  stroke-dashoffset="439.82" />
+              </svg>
+              <div class="score-number" id="score-num">0</div>
+            </div>
+            <div class="score-label" id="score-lbl">—</div>
+            <div class="score-sublabel" id="score-nearby">—</div>
+          </div>
         </div>
       </div>
-      <!-- SAFETY TAB -->
-      <div class="tab-panel" id="tab-safety">
-        <div class="safety-search form-group"><label>Search Area</label><input class="form-input" id="safety-area"
-            placeholder="Type an area name...">
-          <div class="search-results" id="safety-results"></div>
-        </div>
-        <div class="score-display" id="score-display" style="display:none">
-          <div class="score-ring"><svg viewBox="0 0 160 160">
-              <circle class="bg" cx="80" cy="80" r="70" />
-              <circle class="fg" id="score-fg" cx="80" cy="80" r="70" stroke-dasharray="439.82"
-                stroke-dashoffset="439.82" />
-            </svg>
-            <div class="score-number" id="score-num">0</div>
-          </div>
-          <div class="score-label" id="score-lbl">—</div>
-          <div class="score-sublabel" id="score-nearby">—</div>
-        </div>
-      </div>
-    </div>
     </div><!-- end sidebar-content-wrap -->
   </div>
 
@@ -1790,24 +1969,10 @@
     const HAZARD_EMOJI = { manhole: '🕳️', flooding: '🌊', no_light: '🌑', broken_footpath: '🚧', unsafe_area: '⚠️', no_wheelchair_access: '♿', other: '❓' };
     let map, markers = [], clickMarker = null, clickCoords = null, allHazards = [], heatLayer = null, heatmapOn = false, activeTimeFilter = 'all';
 
-    /* ===== LOADING SCREEN ===== */
-    (function initLoading() {
-      const pc = document.getElementById('particles');
-      for (let i = 0; i < 40; i++) {
-        const p = document.createElement('div'); p.className = 'particle';
-        p.style.left = Math.random() * 100 + '%'; p.style.animationDuration = (4 + Math.random() * 6) + 's';
-        p.style.animationDelay = Math.random() * 5 + 's'; p.style.width = p.style.height = (2 + Math.random() * 4) + 'px'; pc.appendChild(p)
-      }
-      const txt = 'Making Chennai Safer, One Step At A Time'; const tw = document.getElementById('typewriter');
-      let ci = 0; const typeInt = setInterval(() => { if (ci < txt.length) { tw.textContent += txt[ci]; ci++ } else clearInterval(typeInt) }, 55);
-      const pb = document.getElementById('progress-bar'); let pw = 0;
-      const progInt = setInterval(() => {
-        pw = Math.min(pw + Math.random() * 6 + 1, 100); pb.style.width = pw + '%';
-        if (pw >= 100) clearInterval(progInt)
-      }, 60);
-      setTimeout(() => { document.getElementById('loading-screen').classList.add('hidden'); initApp() }, 2800);
-    })();
-
+    setTimeout(() => {
+      document.getElementById('loading-screen').classList.add('hidden');
+      initApp();
+    }, 2500);
     /* ===== INIT APP ===== */
     function initApp() {
       const bounds = L.latLngBounds([12.85, 80.05], [13.35, 80.50]);
@@ -1905,7 +2070,7 @@
 
           popupHtml += `</div>`;
           m.bindPopup(popupHtml, { maxWidth: 280 });
-          m.on('click', function() {
+          m.on('click', function () {
             const panels = document.querySelectorAll('.glass-panel, .stat-card, #floating-stats, #dock-pill');
             panels.forEach((el, i) => {
               el.style.transition = 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
