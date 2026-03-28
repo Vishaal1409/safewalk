@@ -1,6 +1,3 @@
-from dotenv import load_dotenv
-import os
-load_dotenv()
 from src.services.route_engine import haversine_distance, get_hazards_along_route, calculate_route_safety, calculate_wheelchair_route
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,7 +20,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Allowed hazard types
-ALLOWED_TYPES = ["manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"]
+ALLOWED_TYPES = ["manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access", "other"]
 
 # Initialize the FastAPI app
 app = FastAPI(title="SafeWalk API")
@@ -187,15 +184,18 @@ async def create_hazard(
     # Save hazard to database
     try:
         safe_description = html.escape(description)
+        from datetime import datetime, timezone
         hazard_data = {
-            "type": type,
-            "description": safe_description,
-            "latitude": latitude,
-            "longitude": longitude,
-            "reported_by": reported_by,
-            "photo_url": photo_url,
-            "confirmed_count": 0
+        "type": type,
+        "description": description,
+        "latitude": latitude,
+        "longitude": longitude,
+        "reported_by": reported_by,
+        "photo_url": photo_url,
+        "confirmed_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
         }
+        
         response = supabase.table("hazards").insert(hazard_data).execute()
         return {
             "status": "success",

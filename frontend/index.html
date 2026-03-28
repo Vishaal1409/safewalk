@@ -650,6 +650,7 @@
     .tab-btn {
       flex: 1;
       padding: 9px 0;
+      line-height: 1.3;
       border: none;
       background: transparent;
       color: rgba(255, 255, 255, 0.45);
@@ -1964,9 +1965,10 @@
         </div>
       </div>
       <div class="tabs-bar">
-        <button class="tab-btn active" data-tab="report">📝 Report</button>
-        <button class="tab-btn" data-tab="confirm">✅ Confirm</button>
-        <button class="tab-btn" data-tab="safety">🛡 Safety</button>
+        <button class="tab-btn active" data-tab="report"><span style="display:block;font-size:1.1rem">📝</span>Report</button>
+        <button class="tab-btn" data-tab="confirm"><span style="display:block;font-size:1.1rem">✅</span>Confirm</button>
+        <button class="tab-btn" data-tab="confirmed"><span style="display:block;font-size:1.1rem">🛡️</span>Confirmed</button>
+        <button class="tab-btn" data-tab="safety"><span style="display:block;font-size:1.1rem">❤️</span>Safety</button>
       </div>
       <div class="tabs-content">
         <!-- REPORT TAB -->
@@ -2047,6 +2049,12 @@
             <p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">Loading hazards...</p>
           </div>
         </div>
+        <!-- CONFIRMED TAB -->
+        <div class="tab-panel" id="tab-confirmed">
+          <div id="confirmed-list">
+            <p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">Loading...</p>
+          </div>
+        </div>
         <!-- SAFETY TAB -->
         <div class="tab-panel" id="tab-safety">
           <div class="safety-search form-group"><label>Search Area</label><input class="form-input" id="safety-area"
@@ -2125,6 +2133,10 @@
       heatLayer = L.heatLayer([], { radius: 25, blur: 20, maxZoom: 17, gradient: { 0.4: 'blue', 0.65: 'orange', 0.85: 'red', 1: 'darkred' } });
 
       map.on('click', async e => {
+        if (e.latlng.lng > 80.28) {
+        toast('Cannot report a hazard in the sea! 🌊 Please select a location on land.', 'error');
+        return;
+        }
         clickCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
         if (clickMarker) map.removeLayer(clickMarker);
         const icon = L.divIcon({ className: '', html: `<div style="width:20px;height:20px;background:var(--rose);border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);animation:markerPulse 1.5s infinite"></div>`, iconSize: [20, 20], iconAnchor: [10, 10] });
@@ -2150,7 +2162,17 @@
         fetchScoreAt(e.latlng.lat, e.latlng.lng);
       });
 
-      initTabs(); initReport(); initSearch(); initSafetySearch(); initTimeFilter(); loadHazards();
+      initTabs(); initSearch(); initSafetySearch(); initTimeFilter(); loadHazards();
+      document.getElementById('submit-report').addEventListener('click', submitReport);
+      document.querySelectorAll('.type-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('.type-option').forEach(x => x.classList.remove('selected'));
+          opt.classList.add('selected');
+          const wrap = document.getElementById('other-input-wrap');
+          if (opt.dataset.type === 'other') wrap.classList.add('show');
+          else wrap.classList.remove('show');
+        });
+      });
       setInterval(loadHazards, 60000);
     }
 
@@ -2161,6 +2183,7 @@
         document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
         b.classList.add('active'); document.getElementById('tab-' + b.dataset.tab).classList.add('active');
         if (b.dataset.tab === 'confirm') renderConfirmList();
+        if (b.dataset.tab === 'confirmed') renderConfirmedList();
       }));
     }
 
@@ -2235,7 +2258,7 @@
           h.latitude &&
           h.longitude &&
           h.latitude > 12.90 && h.latitude < 13.25 &&
-          h.longitude > 80.10 && h.longitude < 80.32   // 👈 IMPORTANT FIX
+          h.longitude > 80.10 && h.longitude < 80.28
         )
         .forEach(h => {
           const isNew = h.created_at && (Date.now() - new Date(h.created_at).getTime() < 3600000);
@@ -2269,107 +2292,6 @@
       if (heatLayer) heatLayer.setLatLngs(heatData);
     }
 
-    /* ===== REPORT ===== */
-    function initReport() {
-      function initReport() {
-
-        document.getElementById('submit-report').addEventListener('click', async () => {
-
-          if (!clickCoords) {
-            showToast('Please select location on map', 'error');
-            return;
-          }
-
-          const typeEl = document.querySelector('.type-option.selected');
-          if (!typeEl) {
-            showToast('Select hazard type', 'error');
-            return;
-          }
-
-          const data = {
-            type: typeEl.dataset.type,
-            description: document.getElementById('report-desc').value,
-            latitude: clickCoords.lat,
-            longitude: clickCoords.lng,
-            reported_by: document.getElementById('report-name').value || 'Anonymous'
-          };
-
-          try {
-            const res = await fetch(API + '/hazards', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data)
-            });
-
-            if (!res.ok) throw new Error();
-
-            showToast('Report submitted successfully', 'success');
-            loadHazards();
-
-          } catch (err) {
-            console.error(err);
-            showToast('Failed to report hazard', 'error');
-          }
-
-        });
-
-      }
-      document.querySelectorAll('.type-option').forEach(o => o.addEventListener('click', () => {
-        document.querySelectorAll('.type-option').forEach(x => x.classList.remove('selected')); o.classList.add('selected');
-        const otherWrap = document.getElementById('other-input-wrap');
-        if (o.dataset.type === 'other') { otherWrap.classList.add('show'); document.getElementById('other-type-input').focus() }
-        else { otherWrap.classList.remove('show') }
-      }));
-      document.getElementById('report-photo').addEventListener('change', e => {
-        const f = e.target.files[0]; document.getElementById('photo-name').textContent = f ? f.name : '';
-        const preview = document.getElementById('photo-preview'), previewImg = document.getElementById('photo-preview-img');
-        if (f) { const reader = new FileReader(); reader.onload = ev => { previewImg.src = ev.target.result; preview.classList.add('has-image') }; reader.readAsDataURL(f) }
-        else { preview.classList.remove('has-image'); previewImg.src = '' }
-      });
-      document.getElementById('remove-photo').addEventListener('click', () => {
-        document.getElementById('report-photo').value = ''; document.getElementById('photo-name').textContent = '';
-        document.getElementById('photo-preview').classList.remove('has-image'); document.getElementById('photo-preview-img').src = '';
-      });
-      document.getElementById('submit-report').addEventListener('click', async () => {
-
-        if (!clickCoords) {
-          showToast('Please select location on map', 'error');
-          return;
-        }
-
-        const typeEl = document.querySelector('.type-option.selected');
-        if (!typeEl) {
-          showToast('Select hazard type', 'error');
-          return;
-        }
-
-        const data = {
-          type: typeEl.dataset.type,
-          description: document.getElementById('report-desc').value,
-          latitude: clickCoords.lat,
-          longitude: clickCoords.lng,
-          reported_by: document.getElementById('report-name').value || 'Anonymous'
-        };
-
-        try {
-          const res = await fetch(API + '/hazards', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          });
-
-          if (!res.ok) throw new Error();
-
-          showToast('Report submitted successfully', 'success');
-          loadHazards();
-
-        } catch (err) {
-          console.error(err);
-          showToast('Failed to report hazard', 'error');
-        }
-
-      });
-    }
     async function submitReport() {
       const typeEl = document.querySelector('.type-option.selected');
       if (!typeEl) return toast('Select a hazard type', 'error');
@@ -2413,7 +2335,7 @@
         return;
       }
 
-      list.innerHTML = allHazards.map(h => {
+      list.innerHTML = allHazards.filter(h => (h.confirmed_count || 0) === 0).map(h => {
         const c = HAZARD_COLORS[h.type] || '#BE185D';
 
         return `
@@ -2441,14 +2363,30 @@
 
     async function confirmSelected() {
       const checked = document.querySelectorAll('.confirm-checkbox:checked');
-
+      if (!checked.length) { toast('Select at least one hazard to confirm', 'info'); return; }
       for (let box of checked) {
         const id = box.dataset.id;
         await fetch(API + `/hazards/${id}/confirm`, { method: 'POST' });
       }
+      toast('Confirmed selected hazards ✅', 'success');
+      await loadHazards();
+      renderConfirmList();
+      renderConfirmedList();
+    }
 
-      showToast('Confirmed selected hazards', 'success');
-      loadHazards();
+    function renderConfirmedList() {
+      const el = document.getElementById('confirmed-list');
+      const confirmed = allHazards.filter(h => (h.confirmed_count || 0) >= 1)
+        .sort((a, b) => (b.confirmed_count || 0) - (a.confirmed_count || 0));
+      if (!confirmed.length) { el.innerHTML = '<p style="color:rgba(255,255,255,0.4);text-align:center;padding:30px 0">No confirmed hazards yet</p>'; return; }
+      const c = h => HAZARD_COLORS[h.type] || '#BE185D';
+      el.innerHTML = confirmed.map(h => `
+        <div class="hazard-card">
+          <div><span class="badge" style="background:${c(h)}">${HAZARD_EMOJI[h.type] || ''} ${(h.type || '').replace(/_/g, ' ')}</span></div>
+          <div class="card-desc">${h.description || '—'}</div>
+          <div class="card-meta"><span>👤 ${h.reported_by || 'Anon'}</span><span>✅ ${h.confirmed_count} confirms</span></div>
+        </div>
+      `).join('');
     }
 
     async function confirmHazard(id, btn) {
@@ -2586,6 +2524,7 @@
       document.querySelectorAll('.tf-pill').forEach(p => p.addEventListener('click', () => {
         document.querySelectorAll('.tf-pill').forEach(x => x.classList.remove('active'));
         p.classList.add('active'); activeTimeFilter = p.dataset.filter; renderMarkers(); updateStats();
+        console.log('Time filter set to:', activeTimeFilter, 'Hazards:', allHazards.length);
         toast('Showing ' + p.dataset.filter + ' hazards', 'info');
       }));
     }
