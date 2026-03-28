@@ -2091,7 +2091,7 @@
   <!-- TOAST CONTAINER -->
   <div class="toast-container" id="toast-container"></div>
   <script>
-    const API = 'http://localhost:8000';
+    const API = 'https://safewalk-95z8.onrender.com';
     const HAZARD_COLORS = { manhole: '#DC2626', flooding: '#2563EB', no_light: '#7C3AED', broken_footpath: '#D97706', unsafe_area: '#9D174D', no_wheelchair_access: '#64748B', other: '#BE185D' };
     const HAZARD_EMOJI = { manhole: '🕳️', flooding: '🌊', no_light: '🌑', broken_footpath: '🚧', unsafe_area: '⚠️', no_wheelchair_access: '♿', other: '❓' };
     let map, markers = [], clickMarker = null, clickCoords = null, allHazards = [], heatLayer = null, heatmapOn = false, activeTimeFilter = 'all';
