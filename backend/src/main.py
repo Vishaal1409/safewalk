@@ -15,11 +15,12 @@ import html
 from src.routes.auth import router as auth_router
 
 # Load environment variables from .env file
-load_dotenv()
+from pathlib import Path
+load_dotenv(dotenv_path=Path("C:/Users/thund/safewalk/backend/.env"))
 
 # Initialize Supabase client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # Allowed hazard types
 ALLOWED_TYPES = ["manhole", "flooding", "no_light", "broken_footpath", "unsafe_area", "no_wheelchair_access"]

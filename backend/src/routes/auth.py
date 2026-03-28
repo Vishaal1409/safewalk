@@ -9,10 +9,11 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from supabase import create_client
 
-load_dotenv()
+from pathlib import Path
+load_dotenv(dotenv_path=Path(__file__).resolve().parents[3] / ".env")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")  # ← fixed
+SUPABASE_KEY = os.getenv("SUPABASE_SECRET_KEY")  # ← fixed
 JWT_SECRET = os.getenv("JWT_SECRET")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -119,3 +120,6 @@ def login(data: LoginRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@router.post("/confirm")
+def confirm_hazard(hazard_id: str):
+    ...
