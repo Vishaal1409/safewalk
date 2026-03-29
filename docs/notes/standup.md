@@ -157,3 +157,8 @@
 
 **Any blockers?**
 - None. The backend is secure, stable, decoupled, and containerized successfully.
+
+**QA & Testing Updates (Just Now):**
+- **Supabase Data Integration:** ✅ Passed. Submitted a dummy hazard report; successfully updated the database (hazard count incremented) and rendered the new marker on the map in real-time.
+- **Heatmap Toggle:** ✅ Passed. Toggled the heatmap ON; the visual heatmap overlay correctly rendered on the map.
+- **Image Upload:** 🔴 Blocked/Failed. Attempted to upload an image during report submission, but the "Click to upload photo" UI element is a bare `<label>` without a focusable `<input type="file">`, preventing programmatic file uploads and posing an accessibility issue. Fixing this HTML structure is required.
