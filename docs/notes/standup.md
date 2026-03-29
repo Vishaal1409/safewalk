@@ -171,3 +171,27 @@
 - **Frontend Decoupling Verified:** Validated the new HTML frontend's type selectors which natively resolves the missing 'other' type (resolving #18).
 - **GitHub Triage**: Executed the final QA and successfully closed legacy Streamlit coupling issues #12, #13, #15, #16, #17, #18, and #28.
 - **Documentation**: Generated the latest application screenshots utilizing Puppeteer and the `docs/architecture.png` architecture visualization utilizing Mermaid. Updated `startup.md` to officially deprecate Streamlit.
+
+### Detailed File & Line Modifications Tracker
+Based on the Git history, here is the granular breakdown of all files updated and line statistics for the work completed today (March 29, 2026):
+
+**Frontend & API Source Code:**
+- `frontend/index.html`: +163 lines, -125 lines (Fixed programmatic image uploads, fixed report submission, added confirm tab, time filter, and appended the missing 'other' hazard type configuration).
+- `index.html` (root): +2571 lines (Initial HTML migration commit).
+- `backend/src/main.py`: +24 lines, -23 lines (Updated the POST `/hazards` endpoint to return REST-compliant `201 Created`, added timestamps).
+
+**QA Test Suite:**
+- `FINAL_QA_TEST/01_full_stress_test.sh`: +14 lines, -21 lines (Updated endpoint check from 8501 to 3000, fixed expectation codes for 201 instead of 200).
+- `backend/test/FINAL_QA_TEST/README.md`: +30 lines, -34 lines (Complete rewrite adding execution instructions and result legends).
+- Relocated scripts securely to `backend/test/FINAL_QA_TEST` (`02_smoke_test.sh`, `03_confirm_spam_test.sh`, etc).
+
+**Documentation & Infrastructure:**
+- `README.md`: +102 lines, -82 lines (Added architecture diagram path, replaced Streamlit setup commands with standard Python HTTP server, and mapped live frontend/backend links).
+- `docs/reports/final_qa_clearance.md`: +35 lines (Generated the final 100% pass QA executive summary).
+- `docs/startup_windows.md`: +38 lines (Created standard Windows execution guide).
+- `docs/notes/standup.md`: +16 lines (Appended today's final status).
+- `backend/requirements.txt`: +3 lines, -1 line.
+
+**Generated Assets:**
+- `docs/architecture.png`: 44.06 KB (Generated via Mermaid-CLI).
+- `docs/screenshots/`: Generated 4 fresh screenshots (`confirm.png`, `map.png`, `report.png`, `safety.png`) updating the README aesthetic.
