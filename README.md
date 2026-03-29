@@ -78,23 +78,21 @@ source .venv/bin/activate
 # 3. Install backend dependencies
 cd backend
 pip install -r requirements.txt
+cd ..
 
-# 4. Set up environment variables
-cp ../.env.example .env
-# Fill in your Supabase keys in .env
+# 4. Install frontend dependencies
+pip install -r frontend/requirements.txt
 
-# 5. Start the backend
-python -m uvicorn src.main:app --reload
+# 5. Run the backend
+cd backend
+uvicorn src.main:app --reload
 
-# 6. Open the frontend in a new terminal
-# Windows
-start ../frontend/index.html
-
-# Mac
-open ../frontend/index.html
+# 6. In a new terminal, run the frontend
+cd frontend
+python -m http.server 3000
 ```
 
-The API runs on `http://localhost:8000` — API docs at `http://localhost:8000/docs`
+The API runs on `http://localhost:8000` and the frontend is available at `http://localhost:3000`.
 
 ---
 

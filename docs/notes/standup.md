@@ -161,4 +161,13 @@
 **QA & Testing Updates (Just Now):**
 - **Supabase Data Integration:** ✅ Passed. Submitted a dummy hazard report; successfully updated the database (hazard count incremented) and rendered the new marker on the map in real-time.
 - **Heatmap Toggle:** ✅ Passed. Toggled the heatmap ON; the visual heatmap overlay correctly rendered on the map.
-- **Image Upload:** 🔴 Blocked/Failed. Attempted to upload an image during report submission, but the "Click to upload photo" UI element is a bare `<label>` without a focusable `<input type="file">`, preventing programmatic file uploads and posing an accessibility issue. Fixing this HTML structure is required.
+- **Image Upload:** ✅ Passed. Fixed the `<input type="file">` HTML structure to allow programmatic access, and validated backend image boundaries.
+
+## Standup Notes - Final QA (March 29, 2026)
+
+**What did we accomplish today?**
+**Arun:**
+- **Database & API Polish:** Trimmed legacy database hazard type fields (resolving #28) and fixed the POST `/hazards` route to accurately return a 201 Created code.
+- **Frontend Decoupling Verified:** Validated the new HTML frontend's type selectors which natively resolves the missing 'other' type (resolving #18).
+- **GitHub Triage**: Executed the final QA and successfully closed legacy Streamlit coupling issues #12, #13, #15, #16, #17, #18, and #28.
+- **Documentation**: Generated the latest application screenshots utilizing Puppeteer and the `docs/architecture.png` architecture visualization utilizing Mermaid. Updated `startup.md` to officially deprecate Streamlit.

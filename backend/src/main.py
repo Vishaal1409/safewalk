@@ -111,7 +111,7 @@ def get_hazards(
         raise HTTPException(status_code=500, detail=str(e))
 
 # 3. Post a new hazard
-@app.post("/hazards")
+@app.post("/hazards", status_code=201)
 async def create_hazard(
     type: str = Form(...),
     description: str = Form(...),

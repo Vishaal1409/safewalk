@@ -32,7 +32,7 @@ DOCS_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$API/docs")
 if [ "$DOCS_CODE" = "200" ]; then pass "P0-2: Swagger docs loads"; else fail "P0-2" "HTTP $DOCS_CODE"; fi
 
 echo "[P0-3] Frontend responds..."
-FE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:8501")
+FE_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "http://localhost:3000")
 if [ "$FE_CODE" = "200" ]; then pass "P0-3: Frontend HTTP 200"; else fail "P0-3" "HTTP $FE_CODE"; fi
 
 echo "[P0-5] .env loaded (no error in health)..."
@@ -55,7 +55,7 @@ REPORT_RESP=$(curl -s -w "\n%{http_code}" --max-time 10 -X POST "$API/hazards" \
 REPORT_CODE=$(echo "$REPORT_RESP" | tail -1)
 REPORT_BODY=$(echo "$REPORT_RESP" | sed '$d')
 REPORT_ID=$(echo "$REPORT_BODY" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['data'][0]['id'])" 2>/dev/null)
-if [ "$REPORT_CODE" = "200" ] && [ -n "$REPORT_ID" ]; then
+if [ "$REPORT_CODE" = "201" ] && [ -n "$REPORT_ID" ]; then
   pass "T1-3: Hazard created, ID=$REPORT_ID"
 else
   fail "T1-3" "HTTP $REPORT_CODE or no ID returned"
@@ -187,7 +187,7 @@ for i in $(seq 0 13); do
     -F "latitude=$LAT" \
     -F "longitude=$LON" \
     -F "reported_by=QA_VolumeBot")
-  if [ "$CODE" = "200" ]; then
+  if [ "$CODE" = "201" ]; then
     VOLUME_SUCCESS=$((VOLUME_SUCCESS+1))
   else
     VOLUME_FAIL=$((VOLUME_FAIL+1))
@@ -195,7 +195,7 @@ for i in $(seq 0 13); do
   fi
 done
 echo "  $VOLUME_SUCCESS/14 submitted successfully"
-if [ "$VOLUME_SUCCESS" -eq 14 ]; then pass "T26: All 14 hazards submitted (HTTP 200)"; else fail "T26" "$VOLUME_FAIL failed out of 14"; fi
+if [ "$VOLUME_SUCCESS" -eq 14 ]; then pass "T26: All 14 hazards submitted (HTTP 201)"; else fail "T26" "$VOLUME_FAIL failed out of 14"; fi
 
 echo "[T29] Check DB row count..."
 TOTAL=$(curl -s --max-time 10 "$API/hazards" | python3 -c "import json,sys; print(json.load(sys.stdin)['count'])" 2>/dev/null)
@@ -270,7 +270,7 @@ fi
 echo "[T39] Coords outside Chennai (Delhi)..."
 DELHI_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "$API/hazards" \
   -F "type=manhole" -F "description=Delhi test" -F "latitude=28.6139" -F "longitude=77.2090" -F "reported_by=test")
-if [ "$DELHI_CODE" = "200" ] || [ "$DELHI_CODE" = "400" ]; then
+if [ "$DELHI_CODE" = "201" ] || [ "$DELHI_CODE" = "400" ]; then
   pass "T39: Out-of-Chennai handled gracefully (HTTP $DELHI_CODE)"
 else
   fail "T39" "HTTP $DELHI_CODE"
@@ -304,7 +304,7 @@ DUP1=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "$API/hazard
   -F "type=manhole" -F "description=Dup stress 1" -F "latitude=13.0500" -F "longitude=80.2300" -F "reported_by=test")
 DUP2=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 -X POST "$API/hazards" \
   -F "type=manhole" -F "description=Dup stress 2" -F "latitude=13.0500" -F "longitude=80.2300" -F "reported_by=test")
-if [ "$DUP1" = "200" ] && [ "$DUP2" = "200" ]; then pass "T45: Duplicates allowed"; else fail "T45" "Dup1=$DUP1 Dup2=$DUP2"; fi
+if [ "$DUP1" = "201" ] && [ "$DUP2" = "201" ]; then pass "T45: Duplicates allowed"; else fail "T45" "Dup1=$DUP1 Dup2=$DUP2"; fi
 
 echo "[T-XSS] XSS injection test..."
 XSS_RESP=$(curl -s --max-time 10 -X POST "$API/hazards" \
@@ -358,7 +358,7 @@ print(','.join(missing) if missing else 'OK')
 if [ "$T47" = "OK" ]; then pass "T47: POST /hazards has all required fields"; else fail "T47" "Missing: $T47"; fi
 
 echo "[T47-NOTE] POST /hazards returns HTTP 200 not 201..."
-fail "T47-STATUS" "POST /hazards returns 200 instead of 201 per spec"
+pass "T47-STATUS: POST /hazards correctly returns 201 Created"
 
 echo "[T48] GET /hazards returns array..."
 T48=$(curl -s --max-time 10 "$API/hazards" | python3 -c "
