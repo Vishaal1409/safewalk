@@ -73,10 +73,10 @@ Run both services with a single command:
 docker-compose up --build
 ```
 
-| Service  | URL                     | Docker Config                     |
-|----------|-------------------------|-----------------------------------|
-| Backend  | `http://localhost:8000` | `docker/backend.Dockerfile`       |
-| Frontend | `http://localhost:80`   | `docker/frontend.Dockerfile` (nginx) |
+| Service  | URL                     | Docker Config                       |
+|----------|-------------------------|-------------------------------------|
+| Backend  | `http://localhost:8000` | `backend/Dockerfile`                |
+| Frontend | `http://localhost:80`   | `frontend/Dockerfile` (nginx)       |
 
 Nginx automatically proxies `/api/*` requests to the backend container.
 

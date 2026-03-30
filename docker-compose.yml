@@ -7,7 +7,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: ../docker/backend.Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -24,11 +24,9 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: ../docker/frontend.Dockerfile
+      dockerfile: Dockerfile
     ports:
       - "80:80"
-    volumes:
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - backend
     restart: unless-stopped

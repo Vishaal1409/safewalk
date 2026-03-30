@@ -74,8 +74,8 @@ cd safewalk
 # 2. Create virtual environment
 python -m venv .venv
 
-# Windows
-source .venv/Scripts/activate
+# Windows (Command Prompt / PowerShell)
+.venv\Scripts\activate
 
 # Mac/Linux
 source .venv/bin/activate
