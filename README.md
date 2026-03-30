@@ -1,5 +1,5 @@
-# 🚶 SafeWalk
-### Crowdsourced Pedestrian Safety Navigation
+# 🚶 SafeWalk — Making Every Walk Safer
+### Crowdsourced Pedestrian Safety Navigation for Indian Cities
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 [![FOSS Hack 2026](https://img.shields.io/badge/FOSS%20Hack-2026-teal.svg)](https://fossunited.org/fosshack/2026)
@@ -44,12 +44,17 @@ Every year in cities like Chennai, Mumbai, and Bengaluru, people fall into open 
 
 All tools are 100% open source.
 
-- **Frontend:** HTML + CSS + JavaScript + Leaflet.js + OpenStreetMap
-- **Backend:** Python + FastAPI + Uvicorn
-- **Database:** PostgreSQL (via Supabase)
-- **Storage:** Supabase Storage (hazard photos)
-- **Auth:** JWT tokens + Passlib
-- **Deployment:** GitHub Pages (frontend) + Render (backend)
+| Layer | Technology |
+|---|---|
+| Frontend | HTML · CSS · JavaScript · Tailwind CSS |
+| Map | Leaflet.js · OpenStreetMap |
+| Backend | Python · FastAPI · Uvicorn |
+| Database | PostgreSQL via Supabase |
+| Storage | Supabase Storage (hazard photos) |
+| Auth | JWT tokens · Passlib · bcrypt |
+| Mobile (planned) | Flutter |
+| Deployment | GitHub Pages (frontend) · Railway / Render (backend) |
+| Containerisation | Docker · docker-compose |
 
 ---
 
@@ -123,6 +128,29 @@ safewalk/
 ├── LICENSE
 └── README.md
 ```
+
+---
+
+## 📸 Screenshots
+
+| Map View | Report Form | Safety Score | Confirmed Tab |
+|---|---|---|---|
+| ![Map](docs/screenshots/map_view.png) | ![Report](docs/screenshots/report_form.png) | ![Safety](docs/screenshots/safety_score.png) | ![Confirm](docs/screenshots/confirm_tab.png) |
+
+> 🔥 **Heatmap Mode**
+> ![Heatmap](docs/screenshots/heatmap.png)
+
+---
+
+## 🏗 Architecture
+
+![SafeWalk Architecture](docs/architecture.png)
+
+---
+
+## 🎬 Demo Video
+
+> 📺 [YouTube link coming soon] — full walkthrough of hazard reporting, map view, and safety scoring.
 
 ---
 

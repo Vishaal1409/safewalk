@@ -1,6 +1,7 @@
 # SafeWalk Final QA Test Suite
 
-This directory contains the complete, automated test suite used to verify the SafeWalk backend API contracts, stress thresholds, and edge case handlers. 
+## Overview
+This folder contains all the reusable test scripts used during the SafeWalk QA Final Verification (March 23, 2026). Run these scripts before any release to ensure minimum QA standards.
 
 ## Prerequisites
 Before running any QA scripts, you **must** ensure that:
