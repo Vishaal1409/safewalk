@@ -39,3 +39,9 @@ yarn-error.log*
 
 # Build outputs
 *.log
+.venv/
+.env
+__pycache__/
+*.pyc
+*.log
+.DS_Store
