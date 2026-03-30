@@ -65,7 +65,7 @@ Just open: **https://vishaal1409.github.io/safewalk/**
 
 ### Option 2 — Run locally
 
-**Prerequisites:** Python 3.x, Git
+**Prerequisites:** Python 3.13+, Git
 ```bash
 # 1. Clone the repo
 git clone https://github.com/Vishaal1409/safewalk.git

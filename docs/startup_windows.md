@@ -8,7 +8,7 @@ This guide covers two ways to run SafeWalk on Windows:
 
 ## Prerequisites
 
-- **Python 3.11+** — [python.org/downloads](https://www.python.org/downloads/)
+- **Python 3.13+** — [python.org/downloads](https://www.python.org/downloads/)
 - **Git** — [git-scm.com](https://git-scm.com/)
 - A `.env` file at the project root with:
   ```

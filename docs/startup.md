@@ -8,7 +8,7 @@ This guide covers two ways to run SafeWalk:
 
 ## Prerequisites
 
-- **Python 3.11+** — `brew install python` or [python.org](https://www.python.org/downloads/)
+- **Python 3.13+** — `brew install python` or [python.org](https://www.python.org/downloads/)
 - **Git** — `brew install git` or pre-installed on most systems
 - A `.env` file at the project root with:
   ```
