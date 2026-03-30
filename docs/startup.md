@@ -1,86 +1,127 @@
-# SafeWalk Startup Guide
+# SafeWalk Startup Guide (Mac / Linux)
 
-This document outlines the steps to start the SafeWalk application, including running the backend API, the frontend interface, and how they connect.
+This guide covers two ways to run SafeWalk:
+- **Option A** — Local development using a virtual environment (venv)
+- **Option B** — Docker Compose (runs everything in containers)
 
 ---
 
 ## Prerequisites
 
-- **Python 3.11+** installed
-- Project dependencies installed in a virtual environment
-- A `.env` file at the project root with `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, and `JWT_SECRET`
+- **Python 3.11+** — `brew install python` or [python.org](https://www.python.org/downloads/)
+- **Git** — `brew install git` or pre-installed on most systems
+- A `.env` file at the project root with:
+  ```
+  SUPABASE_URL=your_supabase_url
+  SUPABASE_SECRET_KEY=your_supabase_key
+  JWT_SECRET=your_jwt_secret
+  ```
+  Copy `.env.example` to get started: `cp .env.example .env`
+
+---
+
+## Option A — Local Development (venv)
+
+### 1. Clone the repo and create a virtual environment
 
 ```bash
-# Activate the virtual environment from the project root
-source .venv/bin/activate
+git clone https://github.com/Vishaal1409/safewalk.git
+cd safewalk
 
-# Install backend dependencies
-pip install -r backend/requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+You should see `(.venv)` in your terminal prompt — that means it's active.
+
+### 2. Install backend dependencies
+
+```bash
+cd backend
+pip install -r requirements.txt
+cd ..
+```
+
+### 3. Start the Backend (FastAPI)
+
+```bash
+cd backend
+uvicorn src.main:app --reload
+```
+
+The `--reload` flag auto-restarts the server when you edit code.
+
+| URL | Purpose |
+|-----|---------|
+| `http://localhost:8000` | REST API |
+| `http://localhost:8000/docs` | Swagger interactive API docs |
+
+### 4. Start the Frontend (Static HTML)
+
+Open a **new terminal tab** (keep the backend running), then:
+
+```bash
+cd frontend
+python3 -m http.server 3000
+```
+
+The frontend is now available at **`http://localhost:3000`**
+
+### 5. Service URLs
+
+| Service  | URL                      |
+|----------|--------------------------|
+| Backend  | http://localhost:8000    |
+| Frontend | http://localhost:3000    |
+| API Docs | http://localhost:8000/docs |
+
+### 6. Stop the servers
+
+Press `Ctrl + C` in each terminal to stop the backend and frontend.
+
+To deactivate the virtual environment when done:
+```bash
+deactivate
 ```
 
 ---
 
-## Option A: Local Development
+## Option B — Docker Compose
 
-### 1. Start the Backend Server (FastAPI)
+> **Prerequisites:** Docker Desktop installed — [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
 
-The backend provides the API for hazard data, authentication, safety scoring, and routing.
+### 1. Clone the repo
 
-1. Open a terminal.
-2. Navigate to the `backend` directory.
-   ```bash
-   cd backend
-   ```
-3. Run the FastAPI development server using `uvicorn`.
-   ```bash
-   uvicorn src.main:app --reload
-   ```
-   *The `--reload` flag enables auto-reloading on code changes.*
+```bash
+git clone https://github.com/Vishaal1409/safewalk.git
+cd safewalk
+```
 
-The backend will start on **`http://localhost:8000`**.  
-API docs are available at **`http://localhost:8000/docs`**.
+### 2. Add your `.env` file
 
-### 2. Start the Frontend (Static HTML)
+```bash
+cp .env.example .env
+# Then edit .env and fill in your Supabase and JWT values
+```
 
-The frontend is a single-page HTML application (`frontend/index.html`) that communicates with the backend API.
-
-1. Open a **new** terminal (keep the backend running).
-2. Navigate to the `frontend` directory.
-   ```bash
-   cd frontend
-   ```
-3. Serve the static files with Python's built-in HTTP server:
-   ```bash
-   python -m http.server 3000
-   ```
-
-The frontend will be available at **`http://localhost:3000`**.
-
-### 3. How They Connect
-
-| Service  | URL                      | Purpose                                            |
-|----------|--------------------------|----------------------------------------------------|
-| Backend  | `http://localhost:8000`  | REST API for hazards, auth, routing, safety scores |
-| Frontend | `http://localhost:3000`  | Static HTML/JS UI — makes API calls to the backend |
-
----
-
-## Option B: Docker Compose
-
-Run both services with a single command:
+### 3. Build and start all services
 
 ```bash
 docker-compose up --build
 ```
 
-| Service  | URL                     | Docker Config                       |
-|----------|-------------------------|-------------------------------------|
-| Backend  | `http://localhost:8000` | `backend/Dockerfile`                |
-| Frontend | `http://localhost:80`   | `frontend/Dockerfile` (nginx)       |
+Both services start automatically. You don't need to run the backend and frontend separately.
+
+| Service  | URL                      |
+|----------|--------------------------|
+| Frontend | http://localhost:80       |
+| Backend  | http://localhost:8000    |
+| API Docs | http://localhost:8000/docs |
 
 Nginx automatically proxies `/api/*` requests to the backend container.
 
-To stop:
+### 4. Stop containers
+
 ```bash
 docker-compose down
 ```
@@ -89,10 +130,11 @@ docker-compose down
 
 ## Troubleshooting
 
-- **Map doesn't load / API errors** — Ensure the backend terminal is running without errors and `.env` variables are set.
-- **Port conflict** — Check for processes using port 8000 or 3000:
-  ```bash
-  lsof -i :8000
-  kill -9 <PID>
-  ```
-- **Docker issues** — Run `docker-compose logs` to check container output.
+| Problem | Fix |
+|---|---|
+| `uvicorn: command not found` | Run `source .venv/bin/activate` first |
+| `ModuleNotFoundError` | Run `pip install -r backend/requirements.txt` again |
+| Map doesn't load / API errors | Check the backend terminal — verify `.env` values are correct |
+| Port conflict on 8000 or 3000 | Run `lsof -i :8000` then `kill -9 <PID>` |
+| Docker build fails | Run `docker-compose logs` to see what went wrong |
+| Permission denied on `.sh` scripts | Run `chmod +x script.sh` first |
