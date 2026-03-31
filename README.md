@@ -133,12 +133,19 @@ safewalk/
 
 ## 📸 Screenshots
 
-| Map View | Report Form | Safety Score | Confirmed Tab |
-|---|---|---|---|
-| ![Map](docs/screenshots/map_view.png) | ![Report](docs/screenshots/report_form.png) | ![Safety](docs/screenshots/safety_score.png) | ![Confirm](docs/screenshots/confirm_tab.png) |
+![Landing](docs/screenshots/landing.png)
 
-> 🔥 **Heatmap Mode**
-> ![Heatmap](docs/screenshots/heatmap.png)
+| Map View | Report Form |
+|---|---|
+| ![Map](docs/screenshots/map_view.png) | ![Report](docs/screenshots/report_form.png) |
+
+| Confirm Hazards | Confirmed Tab |
+|---|---|
+| ![Confirm](docs/screenshots/confirm_tab.png) | ![Confirmed](docs/screenshots/confirmed_tab.png) |
+
+| Safety Score | Heatmap Mode |
+|---|---|
+| ![Safety](docs/screenshots/safety_tab.png) | ![Heatmap](docs/screenshots/heatmap.png) |
 
 ---
 
