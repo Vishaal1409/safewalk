@@ -160,7 +160,7 @@ safewalk/
 
 ## 🎬 Demo Video
 
-> 📺 [YouTube link coming soon] — full walkthrough of hazard reporting, map view, and safety scoring.
+> 📺 https://drive.google.com/file/d/18snC2ssoGO_kbdPVa4JkvWXeWZKcPuMl/view?usp=sharing - full walkthrough of hazard reporting, map view, and safety scoring.
 
 ---
 
