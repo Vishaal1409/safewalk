@@ -11,8 +11,9 @@ SafeWalk is a crowdsourced map layer that lets users report pedestrian hazards �
 
 Built for Indian cities. Built for everyone who walks.
 
-🌐 **Live App:** https://vishaal1409.github.io/safewalk/ &nbsp;|&nbsp; 
-🔌 **Live API:** https://safewalk-95z8.onrender.com/docs
+🌐 **Live App:** https://vishaal1409.github.io/safewalk/ &nbsp;|&nbsp;
+
+🔌 **Live Swagger UI:** https://safewalk-95z8.onrender.com/docs
 
 📘 **API Docs:** https://vishaal1409.github.io/safewalk/docs/safewalk-api-docs.html
 
@@ -175,7 +176,7 @@ safewalk/
 | POST | `/auth/register` | Register a new user |
 | POST | `/auth/login` | Login and get JWT token |
 
-Full API docs: https://safewalk-95z8.onrender.com/docs
+Full API docs: https://vishaal1409.github.io/safewalk/docs/safewalk-api-docs.html
 
 ---
 
