@@ -218,7 +218,7 @@ This is a FOSS Hack 2026 project. Contributions, issues, and feature requests ar
 
 | Name | Role |
 |---|---|
-| Vishaal S | Backend, Database & Safety Algorithm |
+| Vishaal S | Backend, Frontend, Database & Safety Algorithm |
 | Arun Balaji | Backend, Documentation & Project Manager |
 | Shruthika Nair | Frontend & Map Interface |
 | Ishitha Ilan | UI/UX Design & Accessibility |
