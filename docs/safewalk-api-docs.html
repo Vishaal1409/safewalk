@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SafeWalk API Docs — Random Forest Rangers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080b10;
+    --bg2: #0e1219;
+    --bg3: #141920;
+    --border: #1e2535;
+    --border2: #252d3e;
+    --amber: #f5a623;
+    --amber-dim: #7a5010;
+    --green: #1fd07a;
+    --green-dim: #0d4a2e;
+    --red: #f0455a;
+    --red-dim: #4a1520;
+    --blue: #3d9eff;
+    --blue-dim: #0d2e52;
+    --purple: #a78bfa;
+    --text: #d4dae8;
+    --text-muted: #5a6480;
+    --text-dim: #8892aa;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .sidebar-header {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg2);
+    z-index: 10;
+  }
+
+  .logo-mark {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .logo-mark span { color: var(--text); font-weight: 600; }
+
+  .version-badge {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .sidebar-nav { padding: 16px 0 24px; }
+
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    padding: 12px 24px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 24px;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    font-weight: 600;
+  }
+
+  .nav-item:hover {
+    color: var(--text);
+    background: var(--bg3);
+    border-left-color: var(--border2);
+  }
+
+  .nav-item.active {
+    color: var(--amber);
+    border-left-color: var(--amber);
+    background: rgba(245,166,35,0.05);
+  }
+
+  .method-pill {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .pill-get { background: var(--green-dim); color: var(--green); }
+  .pill-post { background: var(--blue-dim); color: var(--blue); }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    padding: 0;
+    max-width: 860px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 60px 56px 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245,166,35,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--amber);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--amber);
+  }
+
+  .hero h1 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--amber);
+  }
+
+  .hero-desc {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    max-width: 500px;
+    margin-bottom: 28px;
+    font-family: var(--mono);
+    line-height: 1.7;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+
+  .meta-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 48px 56px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section:last-child { border-bottom: none; }
+
+  .section-anchor {
+    display: block;
+    height: 80px;
+    margin-top: -80px;
+    visibility: hidden;
+  }
+
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-title .icon {
+    font-size: 1rem;
+    opacity: 0.7;
+  }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    margin-bottom: 32px;
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* ── BASE URL BOX ── */
+  .base-url-box {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .base-url-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .base-url-value {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--amber);
+  }
+
+  /* ── ENDPOINT CARDS ── */
+  .endpoint-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .endpoint-card:hover { border-color: var(--border2); }
+
+  .endpoint-header {
+    padding: 18px 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .method-badge {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 5px;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .badge-get { background: var(--green-dim); color: var(--green); border: 1px solid rgba(31,208,122,0.2); }
+  .badge-post { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(61,158,255,0.2); }
+
+  .endpoint-info { flex: 1; }
+
+  .endpoint-path {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .endpoint-path .path-param { color: var(--amber); }
+
+  .endpoint-summary {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  .endpoint-body {
+    border-top: 1px solid var(--border);
+    padding: 22px;
+  }
+
+  /* ── PARAMS TABLE ── */
+  .params-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .params-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 0.8rem;
+  }
+
+  .params-table th {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 6px 12px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .params-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .params-table tr:last-child td { border-bottom: none; }
+
+  .param-name {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--blue);
+  }
+
+  .param-type {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--purple);
+  }
+
+  .param-required {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--red-dim);
+    color: var(--red);
+  }
+
+  .param-optional {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--bg3);
+    color: var(--text-muted);
+  }
+
+  .param-desc {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .copy-btn {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    background: none;
+    border: 1px solid var(--border2);
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .copy-btn:hover { color: var(--text); border-color: var(--text-muted); }
+  .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+  pre {
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  .c-key { color: var(--blue); }
+  .c-str { color: var(--green); }
+  .c-num { color: var(--amber); }
+  .c-bool { color: var(--purple); }
+  .c-comment { color: var(--text-muted); font-style: italic; }
+  .c-method { color: var(--amber); }
+  .c-url { color: var(--text); }
+
+  /* ── RESPONSE TABS ── */
+  .response-label {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+
+  /* ── STATUS BADGES ── */
+  .status-200 { color: var(--green); }
+  .status-201 { color: var(--blue); }
+  .status-400 { color: var(--amber); }
+  .status-404 { color: var(--red); }
+  .status-500 { color: var(--red); }
+
+  /* ── HAZARD TYPES TABLE ── */
+  .types-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .type-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+  }
+
+  .type-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .type-key { color: var(--blue); flex: 1; }
+  .type-label { color: var(--text-muted); font-size: 0.68rem; }
+
+  /* ── SCORE TABLE ── */
+  .score-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+  }
+
+  .score-table th {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 8px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+  }
+
+  .score-table tr:last-child td { border-bottom: none; }
+
+  /* ── ENV SECTION ── */
+  .env-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .env-row {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+    align-items: start;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+
+  .env-key {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--amber);
+  }
+
+  .env-desc {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    padding: 40px 56px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+  }
+
+  .footer-brand {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .footer-brand strong { color: var(--amber); }
+
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--blue);
+  }
+
+  /* ── INFO CALLOUT ── */
+  .callout {
+    background: rgba(245,166,35,0.05);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .callout strong { color: var(--amber); }
+
+  /* ── ANIMATIONS ── */
+  .section { animation: fadeUp 0.4s ease both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    aside { position: static; height: auto; }
+    .section, .hero { padding: 32px 24px; }
+    .types-grid { grid-template-columns: 1fr; }
+    .env-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+    <div class="sidebar-header">
+      <div class="logo-mark">🛡 Safe<span>Walk</span></div>
+      <div class="version-badge">API v1.0 · FOSS HACK 2026</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Overview</div>
+      <a href="#overview" class="nav-item active">Introduction</a>
+      <a href="#base-url" class="nav-item">Base URL</a>
+      <a href="#env" class="nav-item">Environment</a>
+
+      <div class="nav-section-label">Core</div>
+      <a href="#health" class="nav-item">
+        <span class="method-pill pill-get">GET</span>
+        Health Check
+      </a>
+      <a href="#get-hazards" class="nav-item">
+        <span class="method-pill pill-get">GET</span>
+        Get Hazards
+      </a>
+      <a href="#post-hazard" class="nav-item">
+        <span class="method-pill pill-post">POST</span>
+        Report Hazard
+      </a>
+      <a href="#confirm-hazard" class="nav-item">
+        <span class="method-pill pill-post">POST</span>
+        Confirm Hazard
+      </a>
+      <a href="#safety-score" class="nav-item">
+        <span class="method-pill pill-get">GET</span>
+        Safety Score
+      </a>
+
+      <div class="nav-section-label">Auth</div>
+      <a href="#register" class="nav-item">
+        <span class="method-pill pill-post">POST</span>
+        Register
+      </a>
+      <a href="#login" class="nav-item">
+        <span class="method-pill pill-post">POST</span>
+        Login
+      </a>
+
+      <div class="nav-section-label">Reference</div>
+      <a href="#hazard-types" class="nav-item">Hazard Types</a>
+      <a href="#scoring" class="nav-item">Scoring Algorithm</a>
+      <a href="#errors" class="nav-item">Error Codes</a>
+    </nav>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">Random Forest Rangers</div>
+      <h1>SafeWalk <em>API</em><br/>Reference</h1>
+      <p class="hero-desc">
+        REST API powering crowdsourced pedestrian safety navigation for Indian cities.
+        Built with FastAPI + Supabase. Deployed on Render.
+      </p>
+      <div class="hero-meta">
+        <div class="meta-chip"><span class="dot"></span> Live on Render</div>
+        <div class="meta-chip">FastAPI 0.135</div>
+        <div class="meta-chip">Python 3.x</div>
+        <div class="meta-chip">MIT License</div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section">
+      <span id="overview" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">📖</span> Introduction</h2>
+      <p class="section-desc">
+        The SafeWalk API lets clients report street hazards, retrieve hazard data with optional location filtering,
+        calculate safety scores, confirm community reports, and manage user accounts.
+        All responses are JSON. Form-data is used only for hazard creation (to support image upload).
+      </p>
+
+      <span id="base-url" class="section-anchor"></span>
+      <div class="params-label">Production Base URL</div>
+      <div class="base-url-box">
+        <span class="base-url-label">BASE URL</span>
+        <span class="base-url-value">https://safewalk-95z8.onrender.com</span>
+      </div>
+
+      <div class="params-label">Local Development Base URL</div>
+      <div class="base-url-box">
+        <span class="base-url-label">LOCAL</span>
+        <span class="base-url-value">http://localhost:8000</span>
+      </div>
+
+      <div class="callout">
+        <strong>Note:</strong> The Render free tier spins down after 15 minutes of inactivity.
+        The first request may take 10–30 seconds to wake the server. Subsequent requests are fast.
+      </div>
+
+      <span id="env" class="section-anchor"></span>
+      <h3 style="font-size:1rem; font-weight:700; margin-bottom:12px; margin-top:28px;">Environment Variables</h3>
+      <p class="section-desc" style="margin-bottom:16px;">Copy <code>.env.example</code> to <code>.env</code> and fill in these values before running locally.</p>
+      <div class="env-grid">
+        <div class="env-row">
+          <span class="env-key">SUPABASE_URL</span>
+          <span class="env-desc">Your Supabase project URL — found in Project Settings → API</span>
+        </div>
+        <div class="env-row">
+          <span class="env-key">SUPABASE_SECRET_KEY</span>
+          <span class="env-desc">Service role key from Supabase. Has full DB access — never expose client-side.</span>
+        </div>
+        <div class="env-row">
+          <span class="env-key">SUPABASE_PUBLISHABLE_KEY</span>
+          <span class="env-desc">Anon/public key for client-side use (limited permissions).</span>
+        </div>
+        <div class="env-row">
+          <span class="env-key">JWT_SECRET</span>
+          <span class="env-desc">Secret key used to sign and verify JWT tokens. Use a long random string.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEALTH -->
+    <div class="section">
+      <span id="health" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">💚</span> Health Check</h2>
+      <p class="section-desc">Verify the API server is online and responsive.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/</div>
+            <div class="endpoint-summary">Returns server status and uptime confirmation.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">No parameters</div>
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"status"</span>: <span class="c-str">"online"</span>,
+  <span class="c-key">"message"</span>: <span class="c-str">"SafeWalk Backend is active!"</span>
+}</pre>
+          </div>
+
+          <div class="response-label">Example Request</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> <span class="c-url">https://safewalk-95z8.onrender.com/</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GET HAZARDS -->
+    <div class="section">
+      <span id="get-hazards" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🗺</span> Get Hazards</h2>
+      <p class="section-desc">Fetch all hazards from the database. Optionally filter by geographic location using a bounding box radius.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/hazards</div>
+            <div class="endpoint-summary">Returns all hazards, or those within a radius of a given coordinate.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">Query Parameters</div>
+          <table class="params-table">
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">latitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-optional">optional</span></td>
+                <td class="param-desc">Latitude of the centre point. Must be paired with <code>longitude</code> to activate location filter.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">longitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-optional">optional</span></td>
+                <td class="param-desc">Longitude of the centre point. Must be paired with <code>latitude</code>.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">radius</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-optional">optional</span></td>
+                <td class="param-desc">Bounding box radius in degrees. Default: <code>0.01</code> (~1 km). Use <code>0.01</code> for 1 km, <code>0.05</code> for ~5 km.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"hazards"</span>: [
+    {
+      <span class="c-key">"id"</span>: <span class="c-str">"uuid-string"</span>,
+      <span class="c-key">"type"</span>: <span class="c-str">"manhole"</span>,
+      <span class="c-key">"description"</span>: <span class="c-str">"Open manhole near bus stop"</span>,
+      <span class="c-key">"latitude"</span>: <span class="c-num">13.0827</span>,
+      <span class="c-key">"longitude"</span>: <span class="c-num">80.2707</span>,
+      <span class="c-key">"photo_url"</span>: <span class="c-str">"https://..."</span>,
+      <span class="c-key">"reported_by"</span>: <span class="c-str">"vishaal"</span>,
+      <span class="c-key">"confirmed_count"</span>: <span class="c-num">3</span>,
+      <span class="c-key">"created_at"</span>: <span class="c-str">"2026-03-29T14:22:00+00:00"</span>
+    }
+  ],
+  <span class="c-key">"count"</span>: <span class="c-num">1</span>
+}</pre>
+          </div>
+
+          <div class="response-label">Example Requests</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL — All Hazards</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> <span class="c-url">https://safewalk-95z8.onrender.com/hazards</span></pre>
+          </div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL — Nearby (Chennai centre, 1 km)</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> <span class="c-url">"https://safewalk-95z8.onrender.com/hazards?latitude=13.0827&longitude=80.2707&radius=0.01"</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST HAZARD -->
+    <div class="section">
+      <span id="post-hazard" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🕳</span> Report Hazard</h2>
+      <p class="section-desc">Submit a new hazard report. Optionally attach a photo — it will be uploaded to Supabase Storage and a public URL returned.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/hazards</div>
+            <div class="endpoint-summary">Creates a new hazard record in the database. Accepts multipart/form-data.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="callout">
+            <strong>Content-Type:</strong> This endpoint uses <code>multipart/form-data</code>, not JSON, to support optional image upload.
+          </div>
+
+          <div class="params-label">Form Fields</div>
+          <table class="params-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">type</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Hazard category. See <a href="#hazard-types" style="color:var(--blue)">Hazard Types</a> reference.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">description</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Human-readable description of the hazard.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">latitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Latitude of the hazard location.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">longitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Longitude of the hazard location.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">reported_by</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Username or identifier of the person reporting.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">image</span></td>
+                <td><span class="param-type">file</span></td>
+                <td><span class="param-optional">optional</span></td>
+                <td class="param-desc">Photo of the hazard. Accepted: <code>jpg</code>, <code>jpeg</code>, <code>png</code>. Validated server-side with Pillow.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-label">201 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"message"</span>: <span class="c-str">"Hazard reported successfully!"</span>,
+  <span class="c-key">"data"</span>: [
+    {
+      <span class="c-key">"id"</span>: <span class="c-str">"uuid-string"</span>,
+      <span class="c-key">"type"</span>: <span class="c-str">"manhole"</span>,
+      <span class="c-key">"description"</span>: <span class="c-str">"Open drain on footpath"</span>,
+      <span class="c-key">"latitude"</span>: <span class="c-num">13.0827</span>,
+      <span class="c-key">"longitude"</span>: <span class="c-num">80.2707</span>,
+      <span class="c-key">"photo_url"</span>: <span class="c-str">"https://supabase.co/storage/..."</span>,
+      <span class="c-key">"reported_by"</span>: <span class="c-str">"vishaal"</span>,
+      <span class="c-key">"confirmed_count"</span>: <span class="c-num">0</span>,
+      <span class="c-key">"created_at"</span>: <span class="c-str">"2026-03-31T09:00:00+00:00"</span>
+    }
+  ]
+}</pre>
+          </div>
+
+          <div class="response-label">Example Request</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> -X POST <span class="c-url">https://safewalk-95z8.onrender.com/hazards</span> \
+  -F <span class="c-str">"type=manhole"</span> \
+  -F <span class="c-str">"description=Open drain near Anna Nagar signal"</span> \
+  -F <span class="c-str">"latitude=13.0850"</span> \
+  -F <span class="c-str">"longitude=80.2101"</span> \
+  -F <span class="c-str">"reported_by=vishaal"</span> \
+  -F <span class="c-str">"image=@/path/to/photo.jpg"</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM HAZARD -->
+    <div class="section">
+      <span id="confirm-hazard" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">✅</span> Confirm Hazard</h2>
+      <p class="section-desc">Community verification endpoint. Increments the <code>confirmed_count</code> of a hazard report. Higher confirmation counts give the hazard more weight in the safety score algorithm.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/hazards/<span class="path-param">{hazard_id}</span>/confirm</div>
+            <div class="endpoint-summary">Increments confirmed_count for the given hazard by 1.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">Path Parameters</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">hazard_id</span></td>
+                <td><span class="param-type">string (UUID)</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">The UUID of the hazard to confirm.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout">
+            <strong>Important:</strong> Pass <code>hazard_id</code> as a path parameter in the URL — not in a JSON body. E.g. <code>POST /hazards/abc-123/confirm</code>
+          </div>
+
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"message"</span>: <span class="c-str">"Hazard confirmed!"</span>,
+  <span class="c-key">"confirmed_count"</span>: <span class="c-num">4</span>
+}</pre>
+          </div>
+
+          <div class="response-label">Example Request</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> -X POST <span class="c-url">https://safewalk-95z8.onrender.com/hazards/abc-1234-uuid/confirm</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAFETY SCORE -->
+    <div class="section">
+      <span id="safety-score" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🌟</span> Safety Score</h2>
+      <p class="section-desc">Get a calculated safety score (0–100) for any location. The algorithm weighs nearby hazards by type severity, recency, time of day, and community confirmations.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-get">GET</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/safety-score</div>
+            <div class="endpoint-summary">Returns a 0–100 safety score and human-readable label for a coordinate.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">Query Parameters</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">latitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Latitude of the location to score.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">longitude</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Longitude of the location to score.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">radius</span></td>
+                <td><span class="param-type">float</span></td>
+                <td><span class="param-optional">optional</span></td>
+                <td class="param-desc">Search radius in degrees. Default: <code>0.01</code> (~1 km). Always use degree values, not kilometres.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"latitude"</span>: <span class="c-num">13.0827</span>,
+  <span class="c-key">"longitude"</span>: <span class="c-num">80.2707</span>,
+  <span class="c-key">"nearby_hazards_count"</span>: <span class="c-num">3</span>,
+  <span class="c-key">"safety_score"</span>: <span class="c-num">72.5</span>,
+  <span class="c-key">"safety_label"</span>: <span class="c-str">"⚠️ Use Caution"</span>
+}</pre>
+          </div>
+
+          <div class="response-label">Example Request</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> <span class="c-url">"https://safewalk-95z8.onrender.com/safety-score?latitude=13.0827&longitude=80.2707&radius=0.01"</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTH -->
+    <div class="section">
+      <span id="register" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🔐</span> Authentication</h2>
+      <p class="section-desc">User registration and login endpoints. Login returns a JWT token for authenticated requests.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge badge-post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/auth/register</div>
+            <div class="endpoint-summary">Create a new user account.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">Request Body (JSON)</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">username</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Display name for the user.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">email</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Unique email address.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">password</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Password (hashed with bcrypt before storage).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"message"</span>: <span class="c-str">"Registration successful!"</span>,
+  <span class="c-key">"user"</span>: {
+    <span class="c-key">"username"</span>: <span class="c-str">"vishaal"</span>,
+    <span class="c-key">"email"</span>: <span class="c-str">"vishaal@example.com"</span>
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <span id="login" class="section-anchor"></span>
+      <div class="endpoint-card" style="margin-top:20px;">
+        <div class="endpoint-header">
+          <span class="method-badge badge-post">POST</span>
+          <div class="endpoint-info">
+            <div class="endpoint-path">/auth/login</div>
+            <div class="endpoint-summary">Authenticate a user and receive a JWT token.</div>
+          </div>
+        </div>
+        <div class="endpoint-body">
+          <div class="params-label">Request Body (JSON)</div>
+          <table class="params-table">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="param-name">email</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Registered email address.</td>
+              </tr>
+              <tr>
+                <td><span class="param-name">password</span></td>
+                <td><span class="param-type">string</span></td>
+                <td><span class="param-required">required</span></td>
+                <td class="param-desc">Account password.</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="response-label">200 Response</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">JSON</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre>{
+  <span class="c-key">"message"</span>: <span class="c-str">"Login successful!"</span>,
+  <span class="c-key">"token"</span>: <span class="c-str">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+  <span class="c-key">"username"</span>: <span class="c-str">"vishaal"</span>
+}</pre>
+          </div>
+
+          <div class="response-label">Example Request</div>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="code-lang">cURL</span>
+              <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            </div>
+            <pre><span class="c-method">curl</span> -X POST <span class="c-url">https://safewalk-95z8.onrender.com/auth/login</span> \
+  -H <span class="c-str">"Content-Type: application/json"</span> \
+  -d <span class="c-str">'{"email":"vishaal@example.com","password":"yourpassword"}'</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HAZARD TYPES -->
+    <div class="section">
+      <span id="hazard-types" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🏷</span> Hazard Types</h2>
+      <p class="section-desc">Valid values for the <code>type</code> field when reporting hazards.</p>
+      <div class="types-grid">
+        <div class="type-chip"><div class="type-dot" style="background:#e63946"></div><span class="type-key">manhole</span><span class="type-label">Open Manhole</span></div>
+        <div class="type-chip"><div class="type-dot" style="background:#4895ef"></div><span class="type-key">flooding</span><span class="type-label">Flooding / Waterlogging</span></div>
+        <div class="type-chip"><div class="type-dot" style="background:#7b2d8e"></div><span class="type-key">no_light</span><span class="type-label">No Streetlight</span></div>
+        <div class="type-chip"><div class="type-dot" style="background:#f0a500"></div><span class="type-key">broken_footpath</span><span class="type-label">Broken Footpath</span></div>
+        <div class="type-chip"><div class="type-dot" style="background:#9b1d20"></div><span class="type-key">unsafe_area</span><span class="type-label">Unsafe Area</span></div>
+        <div class="type-chip"><div class="type-dot" style="background:#6b7a99"></div><span class="type-key">no_wheelchair_access</span><span class="type-label">No Wheelchair Access</span></div>
+      </div>
+    </div>
+
+    <!-- SCORING ALGORITHM -->
+    <div class="section">
+      <span id="scoring" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">🧮</span> Scoring Algorithm</h2>
+      <p class="section-desc">How the <code>/safety-score</code> endpoint calculates a score. Each nearby hazard contributes a danger value; the score is <code>max(0, 100 − total_danger)</code>.</p>
+
+      <div class="params-label">Hazard Severity Weights</div>
+      <table class="score-table">
+        <thead><tr><th>Hazard Type</th><th>Base Weight</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>manhole</td><td style="color:var(--red)">10</td><td style="color:var(--text-dim)">Highest — immediate physical danger</td></tr>
+          <tr><td>flooding</td><td style="color:var(--red)">9</td><td style="color:var(--text-dim)">Impassable and injury risk</td></tr>
+          <tr><td>unsafe_area</td><td style="color:var(--amber)">8</td><td style="color:var(--text-dim)">Security concern</td></tr>
+          <tr><td>no_light</td><td style="color:var(--amber)">7</td><td style="color:var(--text-dim)">+50% multiplier applied at night (8 PM–6 AM)</td></tr>
+          <tr><td>no_wheelchair_access</td><td style="color:var(--text-dim)">6</td><td style="color:var(--text-dim)">Accessibility barrier</td></tr>
+          <tr><td>broken_footpath</td><td style="color:var(--text-dim)">5</td><td style="color:var(--text-dim)">Moderate — trip hazard</td></tr>
+        </tbody>
+      </table>
+
+      <div class="params-label">Recency Factors</div>
+      <table class="score-table">
+        <thead><tr><th>Age of Report</th><th>Multiplier</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-dim)">Under 24 hours</td><td style="color:var(--green)">1.0 (full weight)</td></tr>
+          <tr><td style="color:var(--text-dim)">1–3 days</td><td style="color:var(--amber)">0.7</td></tr>
+          <tr><td style="color:var(--text-dim)">3–7 days</td><td style="color:var(--amber)">0.4</td></tr>
+          <tr><td style="color:var(--text-dim)">Older than 7 days</td><td style="color:var(--text-muted)">0.1</td></tr>
+        </tbody>
+      </table>
+
+      <div class="params-label">Safety Score Labels</div>
+      <table class="score-table">
+        <thead><tr><th>Score Range</th><th>Label</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--text-dim)">80 – 100</td><td style="color:var(--green)">✅ Safe</td></tr>
+          <tr><td style="color:var(--text-dim)">60 – 79</td><td style="color:var(--amber)">⚠️ Use Caution</td></tr>
+          <tr><td style="color:var(--text-dim)">40 – 59</td><td style="color:#f97316">🟠 Moderate Risk</td></tr>
+          <tr><td style="color:var(--text-dim)">0 – 39</td><td style="color:var(--red)">🔴 High Risk</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ERRORS -->
+    <div class="section">
+      <span id="errors" class="section-anchor"></span>
+      <h2 class="section-title"><span class="icon">⚠️</span> Error Codes</h2>
+      <p class="section-desc">All errors return a JSON body with a <code>detail</code> field describing what went wrong.</p>
+      <table class="score-table">
+        <thead><tr><th>Status</th><th>Meaning</th><th>Common Cause</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="status-400">400</td>
+            <td style="color:var(--text-dim)">Bad Request</td>
+            <td style="color:var(--text-muted)">Invalid image file, missing required fields, or email already registered.</td>
+          </tr>
+          <tr>
+            <td class="status-401">401</td>
+            <td style="color:var(--text-dim)">Unauthorized</td>
+            <td style="color:var(--text-muted)">Wrong email or password during login.</td>
+          </tr>
+          <tr>
+            <td class="status-404">404</td>
+            <td style="color:var(--text-dim)">Not Found</td>
+            <td style="color:var(--text-muted)">Hazard ID does not exist in the database.</td>
+          </tr>
+          <tr>
+            <td class="status-500">500</td>
+            <td style="color:var(--text-dim)">Internal Server Error</td>
+            <td style="color:var(--text-muted)">Supabase connection issue, missing env vars, or unexpected exception.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="response-label">Error Response Shape</div>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">JSON</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre>{
+  <span class="c-key">"detail"</span>: <span class="c-str">"Hazard not found"</span>
+}</pre>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <div class="footer-brand">
+        <strong>SafeWalk</strong> · Random Forest Rangers 🌲 · FOSS Hack 2026
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/Vishaal1409/safewalk" target="_blank">GitHub</a>
+        <a href="https://safewalk-95z8.onrender.com/docs" target="_blank">Swagger UI</a>
+        <a href="https://fossunited.org/fosshack/2026" target="_blank">FOSS Hack</a>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // Highlight active nav on scroll
+  const sections = document.querySelectorAll('.section-anchor');
+  const navItems = document.querySelectorAll('.nav-item');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navItems.forEach(item => {
+          item.classList.remove('active');
+          if (item.getAttribute('href') === '#' + id) {
+            item.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
